@@ -42,9 +42,15 @@ export function CreatorProfileVisibility() {
   }
 
   useEffect(() => {
-    void load().catch((error: unknown) => {
-      setMessage(error instanceof Error ? error.message : "Unable to load profile.");
-    });
+    const refresh = () => {
+      void load().catch((error: unknown) => {
+        setMessage(error instanceof Error ? error.message : "Unable to load profile.");
+      });
+    };
+
+    refresh();
+    window.addEventListener("creator-profile-updated", refresh);
+    return () => window.removeEventListener("creator-profile-updated", refresh);
   }, []);
 
   const completed = useMemo(() => {
@@ -62,6 +68,7 @@ export function CreatorProfileVisibility() {
   }, [profile]);
 
   const percentage = completed.filter(Boolean).length / checks.length * 100;
+  const isComplete = completed.length === checks.length && completed.every(Boolean);
 
   async function toggleVisibility() {
     if (!profile) return;
@@ -126,13 +133,18 @@ export function CreatorProfileVisibility() {
           </div>
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || (!profile.isPublic && !isComplete)}
             onClick={toggleVisibility}
             className="rounded-full border border-lime-300/40 px-5 py-2 text-sm text-lime-200 disabled:opacity-50"
           >
-            {busy ? "Saving…" : profile.isPublic ? "Make profile private" : "Make profile public"}
+            {busy ? "Saving…" : profile.isPublic ? "Make profile private" : isComplete ? "Make profile public" : "Complete profile to publish"}
           </button>
         </div>
+        {!profile.isPublic && !isComplete && (
+          <p className="mt-3 text-xs text-amber-300">
+            Finish the remaining checklist items before publishing your profile.
+          </p>
+        )}
         {profile.isPublic && (
           <a href={"/creators/" + profile.id} target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm text-lime-300 underline underline-offset-4">
             Preview public profile
