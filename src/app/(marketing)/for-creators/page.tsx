@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
+export default function ForCreators() { return <><SiteHeader/><main className="mx-auto max-w-5xl px-6 py-24"><p className="text-sm uppercase tracking-widest text-lime-300">For creators</p><h1 className="mt-5 text-5xl font-semibold">Make your creativity work for you.</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-400">Build your professional profile, showcase your work and find relevant paid brand collaborations.</p><Link className="mt-9 inline-block rounded-full bg-lime-300 px-6 py-3 font-semibold text-black" href="/sign-up">Join as a creator</Link></main></>; }
