@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
-export default function ForModels() {
-  redirect("/for-creators");
-}
+import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
+export default function ForModels() { return <><SiteHeader/><main className="mx-auto max-w-5xl px-6 py-24"><p className="text-sm uppercase tracking-widest text-lime-300">For models</p><h1 className="mt-5 text-5xl font-semibold">Put your portfolio in front of opportunity.</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-400">Create a professional modelling profile and access fashion, commercial, editorial and product-shoot opportunities.</p><Link className="mt-9 inline-block rounded-full bg-lime-300 px-6 py-3 font-semibold text-black" href="/sign-up">Join as a model</Link></main></>; }
