@@ -9,12 +9,15 @@ const reviewSchema=z.object({id:z.string().min(1),decision:z.enum(["APPROVED","R
 export async function GET() {
   const user=await getCurrentUser();
   if(!user) return NextResponse.json({error:"Unauthorized"},{status:401});
-  if(!isStaffRole(user.role)) return NextResponse.json({error:"Forbidden"},{status:403});
-  const requests=await prisma.verificationRequest.findMany({
-    orderBy:{createdAt:"asc"},
-    include:{applicant:{select:{id:true,name:true,email:true,role:true,creatorProfile:{select:{displayName:true,city:true,state:true}},brandMemberships:{include:{brand:{select:{name:true}}}}}},reviewer:{select:{name:true,email:true}}},
-  });
-  return NextResponse.json({requests});
+  if(isStaffRole(user.role)) {
+    const requests=await prisma.verificationRequest.findMany({
+      orderBy:{createdAt:"asc"},
+      include:{applicant:{select:{id:true,name:true,email:true,role:true,creatorProfile:{select:{displayName:true,city:true,state:true}},brandMemberships:{include:{brand:{select:{name:true}}}}}},reviewer:{select:{name:true,email:true}}},
+    });
+    return NextResponse.json({requests});
+  }
+  const item=await prisma.verificationRequest.findFirst({where:{userId:user.id},orderBy:{createdAt:"desc"}});
+  return NextResponse.json({item});
 }
 export async function POST(request:Request) {
   const user=await getCurrentUser();
