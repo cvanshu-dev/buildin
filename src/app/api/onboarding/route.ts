@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         }});
       }
       return tx.user.update({
-        where: { id: user.id },
+        where: { id: user.id, role: "PENDING" },
         data: { role: parsed.data.role, onboardingDone: true },
         select: { role: true },
       });
