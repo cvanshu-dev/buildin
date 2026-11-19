@@ -3,27 +3,29 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id                String   @id @default(cuid())
-  name              String
-  email             String   @unique
-  emailVerified     Boolean  @default(false)
-  image             String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  role              String   @default("PENDING")
-  status            String   @default("ACTIVE")
-  onboardingDone    Boolean  @default(false)
-  sessions          Session[]
-  accounts          Account[]
-  brandMemberships  BrandMember[]
-  creatorProfile    CreatorProfile?
+  id                   String                @id @default(cuid())
+  name                 String
+  email                String                @unique
+  emailVerified        Boolean               @default(false)
+  image                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  role                 String                @default("PENDING")
+  status               String                @default("ACTIVE")
+  onboardingDone       Boolean               @default(false)
+  sessions             Session[]
+  accounts             Account[]
+  brandMemberships     BrandMember[]
+  creatorProfile       CreatorProfile?
   verificationRequests VerificationRequest[] @relation("VerificationApplicant")
-  reviews           VerificationRequest[] @relation("VerificationReviewer")
+  reviews              VerificationRequest[] @relation("VerificationReviewer")
+
   @@index([role, status])
 }
 
@@ -37,6 +39,7 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
@@ -55,8 +58,9 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-  @@index([userId])
+
   @@unique([providerId, accountId])
+  @@index([userId])
 }
 
 model Verification {
@@ -66,6 +70,7 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
   @@index([identifier])
 }
 
@@ -97,67 +102,109 @@ model BrandMember {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
   @@unique([userId, brandId])
   @@index([brandId])
 }
 
 model CreatorProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  displayName String?
-  bio         String?
-  city        String?
-  state       String?
-  categories  String[] @default([])
-  specialties String[] @default([])
-  languages   String[] @default([])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String          @id @default(cuid())
+  userId         String          @unique
+  displayName    String?
+  bio            String?
+  city           String?
+  state          String?
+  categories     String[]        @default([])
+  specialties    String[]        @default([])
+  languages      String[]        @default([])
+  isPublic       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   portfolioItems PortfolioItem[]
   socialAccounts SocialAccount[]
 }
 
 model PortfolioItem {
-  id               String   @id @default(cuid())
+  id               String         @id @default(cuid())
   creatorProfileId String
   title            String
   description      String?
   mediaUrl         String
-  mediaType        String   @default("IMAGE")
-  sortOrder        Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  mediaType        String         @default("IMAGE")
+  sortOrder        Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
   creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+
   @@index([creatorProfileId, sortOrder])
 }
 
 model SocialAccount {
-  id               String   @id @default(cuid())
-  creatorProfileId String
-  platform         String
-  handle           String
-  profileUrl       String
-  followers        Int?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  id                           String                        @id @default(cuid())
+  creatorProfileId             String
+  platform                     String
+  handle                       String
+  profileUrl                   String
+  followers                    Int?
+  createdAt                    DateTime                      @default(now())
+  updatedAt                    DateTime                      @updatedAt
+  creatorProfile               CreatorProfile                @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  socialAccountMetricSnapshots SocialAccountMetricSnapshot[]
+
   @@unique([creatorProfileId, platform])
   @@index([creatorProfileId])
 }
 
 model VerificationRequest {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   userId       String
-  status       String   @default("PENDING")
+  status       String    @default("PENDING")
   note         String?
   reviewNote   String?
   reviewedById String?
   reviewedAt   DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  applicant    User     @relation("VerificationApplicant", fields: [userId], references: [id], onDelete: Cascade)
-  reviewer     User?    @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  applicant    User      @relation("VerificationApplicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer     User?     @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
   @@index([status, createdAt])
   @@index([userId, createdAt])
+}
+
+model SocialAccountMetricSnapshot {
+  id              String @id @default(cuid())
+  socialAccountId String
+
+  followers       Int
+  averageLikes    Int?
+  averageComments Int?
+  engagementRate  Float?
+
+  source     String   @default("SELF_REPORTED")
+  recordedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  audienceInsights AudienceInsight[]
+
+  @@index([socialAccountId, recordedAt])
+}
+
+model AudienceInsight {
+  id               String @id @default(cuid())
+  metricSnapshotId String
+
+  category   String
+  label      String
+  percentage Float
+
+  createdAt DateTime @default(now())
+
+  metricSnapshot SocialAccountMetricSnapshot @relation(fields: [metricSnapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([metricSnapshotId, category, label])
+  @@index([metricSnapshotId, category])
 }

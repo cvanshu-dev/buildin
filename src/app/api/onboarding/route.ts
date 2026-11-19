@@ -51,35 +51,71 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      if (parsed.data.role === "BRAND") {
-        const data = parsed.data;
-        const base = slugify(data.brandName);
-        let slug = base;
-        for (let suffix = 2; await tx.brand.findUnique({ where: { slug } }); suffix++) slug = `${base}-${suffix}`;
-        await tx.brand.create({
+      const result = await prisma.$transaction(
+      async (tx) => {
+        if (parsed.data.role === "BRAND") {
+          const data = parsed.data;
+          const base = slugify(data.brandName);
+          let slug = base;
+
+          for (
+            let suffix = 2;
+            await tx.brand.findUnique({ where: { slug } });
+            suffix++
+          ) {
+            slug = `${base}-${suffix}`;
+          }
+
+          await tx.brand.create({
+            data: {
+              name: data.brandName,
+              slug,
+              website: data.website || null,
+              industry: data.industry || null,
+              description: data.description || null,
+              city: data.city,
+              state: data.state,
+              address: data.address || null,
+              contactName: data.contactName || null,
+              contactEmail: data.contactEmail || null,
+              phone: data.phone || null,
+              gstin: data.gstin || null,
+              members: {
+                create: { userId: user.id, title: "Owner" },
+              },
+            },
+          });
+        } else {
+          const data = parsed.data;
+
+          await tx.creatorProfile.create({
+            data: {
+              userId: user.id,
+              displayName: data.displayName,
+              bio: data.bio || null,
+              city: data.city,
+              state: data.state,
+              categories: data.categories,
+              specialties: data.specialties,
+              languages: data.languages,
+            },
+          });
+        }
+
+        return tx.user.update({
+          where: { id: user.id, role: "PENDING" },
           data: {
-            name: data.brandName, slug, website: data.website || null, industry: data.industry || null,
-            description: data.description || null, city: data.city, state: data.state,
-            address: data.address || null, contactName: data.contactName || null,
-            contactEmail: data.contactEmail || null, phone: data.phone || null, gstin: data.gstin || null,
-            members: { create: { userId: user.id, title: "Owner" } },
+            role: parsed.data.role,
+            onboardingDone: true,
           },
+          select: { role: true },
         });
-      } else {
-        const data = parsed.data;
-        await tx.creatorProfile.create({ data: {
-          userId: user.id, displayName: data.displayName, bio: data.bio || null,
-          city: data.city, state: data.state, categories: data.categories,
-          specialties: data.specialties, languages: data.languages,
-        }});
+      },
+      {
+        maxWait: 10000,
+        timeout: 20000,
       }
-      return tx.user.update({
-        where: { id: user.id, role: "PENDING" },
-        data: { role: parsed.data.role, onboardingDone: true },
-        select: { role: true },
-      });
-    });
+    );
     return NextResponse.json({ ok: true, redirectTo: dashboardForRole(result.role) });
   } catch (error) {
     console.error("Onboarding failed", error);
