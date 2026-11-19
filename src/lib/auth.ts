@@ -21,25 +21,12 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 10,
     autoSignIn: false,
-    requireEmailVerification: true,
+    requireEmailVerification: false,
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
         subject: "Reset your Creator Marketplace password",
         text: `Hi ${user.name},\n\nUse this link to reset your password. The link is time-limited and can only be used once:\n${url}\n\nIf you did not request this, you can ignore this email.`,
-      });
-    },
-  },
-  emailVerification: {
-    sendOnSignUp: true,
-    sendOnSignIn: true,
-    autoSignInAfterVerification: true,
-    expiresIn: 60 * 60,
-    sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your Creator Marketplace email",
-        text: `Hi ${user.name},\n\nVerify your email address using this link:\n${url}\n\nThis link expires in one hour.`,
       });
     },
   },
