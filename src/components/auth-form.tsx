@@ -24,7 +24,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         ? await signUp.email({ name: name.trim(), email: email.trim(), password, callbackURL: "/onboarding" })
         : await signIn.email({ email: email.trim(), password, callbackURL: "/dashboard" });
       if (result.error) throw new Error(result.error.message || "Authentication failed.");
-      router.push(isSignUp ? "/verify-email" : "/dashboard");
+      router.push(isSignUp ? "/onboarding" : "/dashboard");
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong. Please try again.");
@@ -34,7 +34,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function handleGoogle() {
     setError(""); setLoading(true);
     try {
-      const result = await signIn.social({ provider: "google", callbackURL: "/dashboard" });
+      const result = await signIn.social({ provider: "google", callbackURL: "/onboarding" });
       if (result.error) throw new Error(result.error.message || "Google sign-in failed.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Google sign-in is not configured yet.");
