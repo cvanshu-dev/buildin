@@ -14,7 +14,7 @@ export function ContactForm(){
  return <form onSubmit={submit} className="space-y-5 rounded-3xl border border-white/10 bg-white/[.03] p-7">
   <label className="block text-sm text-zinc-300">Your name<input name="name" required maxLength={100} className={input}/></label>
   <label className="block text-sm text-zinc-300">Email<input name="email" type="email" required maxLength={254} className={input}/></label>
-  <label className="block text-sm text-zinc-300">I'm contacting about<select name="topic" className={input}><option>Managed campaign</option><option>Brand account</option><option>Creator account</option><option>General enquiry</option></select></label>
+  <label className="block text-sm text-zinc-300">I&apos;m contacting about<select name="topic" className={input}><option>Managed campaign</option><option>Brand account</option><option>Creator account</option><option>General enquiry</option></select></label>
   <label className="block text-sm text-zinc-300">Message<textarea name="message" required minLength={10} maxLength={4000} rows={5} className={input}/></label>
   <button disabled={busy} className="w-full rounded-full bg-lime-300 px-6 py-3.5 font-semibold text-black disabled:opacity-50">{busy?"Sending...":"Send enquiry"}</button>
   {status&&<p role="status" className="text-sm text-zinc-300">{status}</p>}

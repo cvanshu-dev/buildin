@@ -26,3 +26,15 @@ export function dashboardForRole(role: string) {
     default: return "/onboarding";
   }
 }
+
+const staffRoles = [
+  USER_ROLES.ADMIN,
+  USER_ROLES.SUPER_ADMIN,
+  USER_ROLES.CAMPAIGN_MANAGER,
+  USER_ROLES.FINANCE_MANAGER,
+] as const;
+
+export function isStaffRole(value: unknown): value is (typeof staffRoles)[number] {
+  return typeof value === "string" &&
+    staffRoles.includes(value as (typeof staffRoles)[number]);
+}
