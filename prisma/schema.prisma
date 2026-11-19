@@ -7,27 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Better Auth identity model. Keep the standard field names expected by its Prisma adapter.
 model User {
-  id              String   @id @default(cuid())
-  name            String
-  email           String   @unique
-  emailVerified   Boolean  @default(false)
-  image           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Marketplace-specific fields. Public signup cannot set privileged roles.
-  role            String   @default("PENDING")
-  status          String   @default("ACTIVE")
-  onboardingDone  Boolean  @default(false)
-
-  sessions        Session[]
-  accounts        Account[]
-  brandMemberships BrandMember[]
-  creatorProfile  CreatorProfile?
-  modelProfile    ModelProfile?
-
+  id                String   @id @default(cuid())
+  name              String
+  email             String   @unique
+  emailVerified     Boolean  @default(false)
+  image             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  role              String   @default("PENDING")
+  status            String   @default("ACTIVE")
+  onboardingDone    Boolean  @default(false)
+  sessions          Session[]
+  accounts          Account[]
+  brandMemberships  BrandMember[]
+  creatorProfile    CreatorProfile?
   @@index([role, status])
 }
 
@@ -41,7 +35,6 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@index([userId])
 }
 
@@ -60,7 +53,6 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-
   @@index([userId])
   @@unique([providerId, accountId])
 }
@@ -72,21 +64,27 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
   @@index([identifier])
 }
 
 model Brand {
-  id          String        @id @default(cuid())
-  name        String
-  slug        String        @unique
-  website     String?
-  industry    String?
-  description String?
-  logoUrl     String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  members     BrandMember[]
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  website      String?
+  industry     String?
+  description  String?
+  logoUrl      String?
+  city         String?
+  state        String?
+  address      String?
+  contactName  String?
+  contactEmail String?
+  phone        String?
+  gstin        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  members      BrandMember[]
 }
 
 model BrandMember {
@@ -97,7 +95,6 @@ model BrandMember {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-
   @@unique([userId, brandId])
   @@index([brandId])
 }
@@ -110,19 +107,8 @@ model CreatorProfile {
   city        String?
   state       String?
   categories  String[] @default([])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model ModelProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  displayName String?
-  bio         String?
-  city        String?
-  state       String?
   specialties String[] @default([])
+  languages   String[] @default([])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)

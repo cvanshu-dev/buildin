@@ -1,4 +1,14 @@
-export const accountTypes = ["BRAND", "CREATOR", "MODEL"] as const;
+export const USER_ROLES = {
+  PENDING: "PENDING",
+  BRAND: "BRAND",
+  CREATOR: "CREATOR",
+  ADMIN: "ADMIN",
+  SUPER_ADMIN: "SUPER_ADMIN",
+  CAMPAIGN_MANAGER: "CAMPAIGN_MANAGER",
+  FINANCE_MANAGER: "FINANCE_MANAGER",
+} as const;
+
+export const accountTypes = ["BRAND", "CREATOR"] as const;
 export type AccountType = (typeof accountTypes)[number];
 
 export function isAccountType(value: unknown): value is AccountType {
@@ -9,9 +19,22 @@ export function dashboardForRole(role: string) {
   switch (role) {
     case "BRAND": return "/dashboard/brand";
     case "CREATOR": return "/dashboard/creator";
-    case "MODEL": return "/dashboard/model";
     case "ADMIN":
-    case "SUPER_ADMIN": return "/dashboard/admin";
+    case "SUPER_ADMIN":
+    case "CAMPAIGN_MANAGER":
+    case "FINANCE_MANAGER": return "/dashboard/admin";
     default: return "/onboarding";
   }
+}
+
+const staffRoles = [
+  USER_ROLES.ADMIN,
+  USER_ROLES.SUPER_ADMIN,
+  USER_ROLES.CAMPAIGN_MANAGER,
+  USER_ROLES.FINANCE_MANAGER,
+] as const;
+
+export function isStaffRole(value: unknown): value is (typeof staffRoles)[number] {
+  return typeof value === "string" &&
+    staffRoles.includes(value as (typeof staffRoles)[number]);
 }

@@ -1,0 +1,3 @@
+import { SiteHeader } from "@/components/site-header";
+import { ContactForm } from "@/components/contact-form";
+export default function ContactPage(){return <><SiteHeader/><main className="mx-auto grid max-w-6xl gap-12 px-6 py-24 text-white md:grid-cols-[.8fr_1.2fr]"><div><p className="text-xs uppercase tracking-[.2em] text-lime-300">Contact</p><h1 className="mt-5 text-5xl font-semibold tracking-tight">Tell us what you&apos;re building.</h1><p className="mt-6 leading-8 text-zinc-400">Share a campaign brief, ask about joining the network or send a product question. We&apos;ll use the details you submit only to respond to your enquiry.</p></div><ContactForm/></main></>;}
