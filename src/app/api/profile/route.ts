@@ -1,0 +1,53 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { getCurrentUser } from "@/lib/current-user";
+import { prisma } from "@/lib/prisma";
+
+const text = (max: number) => z.string().trim().max(max).optional().nullable();
+const creatorSchema = z.object({
+  displayName: z.string().trim().min(2).max(80),
+  bio: text(1000), city: text(80), state: text(80),
+  categories: z.array(z.string().trim().min(1).max(50)).max(12),
+  specialties: z.array(z.string().trim().min(1).max(50)).max(12),
+  languages: z.array(z.string().trim().min(1).max(40)).max(10),
+});
+const brandSchema = z.object({
+  name: z.string().trim().min(2).max(100), website: text(200),
+  industry: text(80), description: text(1000), city: text(80),
+  state: text(80), address: text(240), contactName: text(100),
+  contactEmail: z.string().email().max(254).optional().nullable().or(z.literal("")),
+  phone: text(30), gstin: text(15),
+});
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({error:"Unauthorized"},{status:401});
+  if (user.role === "CREATOR") {
+    const profile = await prisma.creatorProfile.findUnique({where:{userId:user.id},include:{portfolioItems:{orderBy:{sortOrder:"asc"}},socialAccounts:true}});
+    return NextResponse.json({type:"CREATOR",profile});
+  }
+  if (user.role === "BRAND") {
+    const membership = await prisma.brandMember.findFirst({where:{userId:user.id},include:{brand:true}});
+    return NextResponse.json({type:"BRAND",profile:membership?.brand ?? null});
+  }
+  return NextResponse.json({error:"This account cannot edit a marketplace profile."},{status:403});
+}
+export async function PUT(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({error:"Unauthorized"},{status:401});
+  const body = await request.json().catch(()=>null);
+  if (user.role === "CREATOR") {
+    const parsed = creatorSchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({error:parsed.error.issues[0]?.message ?? "Invalid profile."},{status:400});
+    const profile = await prisma.creatorProfile.update({where:{userId:user.id},data:{...parsed.data,bio:parsed.data.bio || null}});
+    return NextResponse.json({ok:true,profile});
+  }
+  if (user.role === "BRAND") {
+    const parsed = brandSchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({error:parsed.error.issues[0]?.message ?? "Invalid profile."},{status:400});
+    const membership = await prisma.brandMember.findFirst({where:{userId:user.id,title:"Owner"},select:{brandId:true}});
+    if (!membership) return NextResponse.json({error:"Only the brand owner can edit these details."},{status:403});
+    const profile = await prisma.brand.update({where:{id:membership.brandId},data:{...parsed.data,website:parsed.data.website || null,contactEmail:parsed.data.contactEmail || null}});
+    return NextResponse.json({ok:true,profile});
+  }
+  return NextResponse.json({error:"Forbidden"},{status:403});
+}
