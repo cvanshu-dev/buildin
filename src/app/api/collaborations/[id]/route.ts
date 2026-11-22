@@ -11,7 +11,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       id,
       OR: [
         { creatorProfile: { userId: user.id } },
-        { campaign: { brand: { members: { some: { userId: user.id } } } },
+        { campaign: { brand: { members: { some: { userId: user.id } } } } },
       ],
     },
     include: {
@@ -20,7 +20,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       messages: { orderBy: { createdAt: "asc" }, take: 100, include: { sender: { select: { id: true, name: true } } } },
       deliverables: {
         orderBy: { createdAt: "asc" },
-        include: { submissions: { orderBy: { version: "desc" }, select: { id: true, version: true, assetUrl: true, note: true, createdAt: true } } },
+        include: {
+          submissions: {
+            orderBy: { version: "desc" },
+            select: { id: true, version: true, assetUrl: true, note: true, createdAt: true },
+          },
+        },
       },
       agreement: true,
     },
