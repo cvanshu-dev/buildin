@@ -25,8 +25,7 @@ model User {
   creatorProfile       CreatorProfile?
   verificationRequests VerificationRequest[] @relation("VerificationApplicant")
   reviews              VerificationRequest[] @relation("VerificationReviewer")
-
-  @@index([role, status])
+  sentMessages         CollaborationMessage[]
 }
 
 model Session {
@@ -39,7 +38,6 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@index([userId])
 }
 
@@ -58,19 +56,17 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-
   @@unique([providerId, accountId])
   @@index([userId])
 }
 
 model Verification {
-  id         String   @id @default(cuid())
+  id         String   @id
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
   @@index([identifier])
 }
 
@@ -92,6 +88,7 @@ model Brand {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   members      BrandMember[]
+  campaigns    Campaign[]
 }
 
 model BrandMember {
@@ -102,7 +99,6 @@ model BrandMember {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-
   @@unique([userId, brandId])
   @@index([brandId])
 }
@@ -123,6 +119,9 @@ model CreatorProfile {
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   portfolioItems PortfolioItem[]
   socialAccounts SocialAccount[]
+  applications   CampaignApplication[]
+  collaborations Collaboration[]
+  @@index([isPublic, city, state])
 }
 
 model PortfolioItem {
@@ -136,7 +135,6 @@ model PortfolioItem {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
-
   @@index([creatorProfileId, sortOrder])
 }
 
@@ -151,7 +149,6 @@ model SocialAccount {
   updatedAt                    DateTime                      @updatedAt
   creatorProfile               CreatorProfile                @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
   socialAccountMetricSnapshots SocialAccountMetricSnapshot[]
-
   @@unique([creatorProfileId, platform])
   @@index([creatorProfileId])
 }
@@ -168,7 +165,6 @@ model VerificationRequest {
   updatedAt    DateTime  @updatedAt
   applicant    User      @relation("VerificationApplicant", fields: [userId], references: [id], onDelete: Cascade)
   reviewer     User?     @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-
   @@index([status, createdAt])
   @@index([userId, createdAt])
 }
@@ -176,35 +172,127 @@ model VerificationRequest {
 model SocialAccountMetricSnapshot {
   id              String @id @default(cuid())
   socialAccountId String
-
   followers       Int
   averageLikes    Int?
   averageComments Int?
   engagementRate  Float?
-
   source     String   @default("SELF_REPORTED")
   recordedAt DateTime @default(now())
   createdAt  DateTime @default(now())
-
   socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
-
   audienceInsights AudienceInsight[]
-
   @@index([socialAccountId, recordedAt])
 }
 
 model AudienceInsight {
   id               String @id @default(cuid())
   metricSnapshotId String
-
   category   String
   label      String
   percentage Float
-
   createdAt DateTime @default(now())
-
   metricSnapshot SocialAccountMetricSnapshot @relation(fields: [metricSnapshotId], references: [id], onDelete: Cascade)
-
   @@unique([metricSnapshotId, category, label])
   @@index([metricSnapshotId, category])
+}
+
+model Campaign {
+  id             String   @id @default(cuid())
+  brandId        String
+  title          String
+  brief          String
+  objectives     String[]
+  categories     String[]
+  platforms      String[]
+  location       String?
+  budgetMin      Int?
+  budgetMax      Int?
+  currency       String   @default("INR")
+  slots          Int      @default(1)
+  applicationDeadline DateTime?
+  startDate      DateTime?
+  endDate        DateTime?
+  status         String   @default("DRAFT")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  brand          Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  applications   CampaignApplication[]
+  collaborations Collaboration[]
+  @@index([status, createdAt])
+  @@index([brandId, status])
+}
+
+model CampaignApplication {
+  id               String   @id @default(cuid())
+  campaignId       String
+  creatorProfileId String
+  pitch            String
+  proposedRate     Int?
+  status           String   @default("SUBMITTED")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  campaign         Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  collaboration   Collaboration?
+  @@unique([campaignId, creatorProfileId])
+  @@index([campaignId, status])
+  @@index([creatorProfileId, status])
+}
+
+model Collaboration {
+  id            String   @id @default(cuid())
+  campaignId    String
+  applicationId String   @unique
+  creatorProfileId String
+  status        String   @default("ACTIVE")
+  agreedAmount  Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  campaign      Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  application   CampaignApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  creatorProfile CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  messages      CollaborationMessage[]
+  deliverables  Deliverable[]
+  agreement     CollaborationAgreement?
+  @@index([creatorProfileId, status])
+  @@index([campaignId, status])
+}
+
+model CollaborationMessage {
+  id              String   @id @default(cuid())
+  collaborationId String
+  senderId        String
+  body            String
+  createdAt       DateTime @default(now())
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  sender          User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  @@index([collaborationId, createdAt])
+}
+
+model Deliverable {
+  id              String   @id @default(cuid())
+  collaborationId String
+  title           String
+  description     String?
+  assetUrl        String?
+  dueAt           DateTime?
+  status          String   @default("PENDING")
+  feedback        String?
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  @@index([collaborationId, status])
+}
+
+model CollaborationAgreement {
+  id              String   @id @default(cuid())
+  collaborationId String   @unique
+  title           String
+  terms           String
+  status          String   @default("DRAFT")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
 }
