@@ -19,10 +19,10 @@ export async function POST(request:Request){
  const parsed=z.object({campaignId:z.string().min(1),creatorProfileId:z.string().min(1),note:z.string().trim().max(1000).optional(),proposedRate:z.number().int().min(0).nullable().optional()}).safeParse(await request.json().catch(()=>null));
  if(!parsed.success)return NextResponse.json({error:parsed.error.issues[0]?.message??"Invalid invitation."},{status:400});
  const [campaign,creator]=await Promise.all([
-  prisma.campaign.findFirst({where:{id:parsed.data.campaignId,brandId:owner.brandId,status:{in:["DRAFT","PUBLISHED","PAUSED"]}},select:{id:true,title:true,status:true}}),
+  prisma.campaign.findFirst({where:{id:parsed.data.campaignId,brandId:owner.brandId,status:"PUBLISHED"},select:{id:true,title:true,status:true}}),
   prisma.creatorProfile.findFirst({where:{id:parsed.data.creatorProfileId,isPublic:true},select:{id:true,userId:true,displayName:true}})
  ]);
- if(!campaign)return NextResponse.json({error:"Choose an active campaign owned by your brand."},{status:404});
+ if(!campaign)return NextResponse.json({error:"Choose a published campaign owned by your brand."},{status:404});
  if(!creator)return NextResponse.json({error:"Public creator profile not found."},{status:404});
  try{
   const item=await prisma.$transaction(async tx=>{
