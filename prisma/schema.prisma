@@ -29,6 +29,7 @@ model User {
   notifications        Notification[]
   auditEvents          AuditLog[]
   assignedCampaigns    Campaign[] @relation("CampaignManager")
+  sentInvitations      CampaignInvitation[]
 }
 
 model Session {
@@ -92,6 +93,8 @@ model Brand {
   updatedAt    DateTime      @updatedAt
   members      BrandMember[]
   campaigns    Campaign[]
+  shortlists   BrandShortlistItem[]
+  invitations  CampaignInvitation[]
 }
 
 model BrandMember {
@@ -124,6 +127,9 @@ model CreatorProfile {
   socialAccounts SocialAccount[]
   applications   CampaignApplication[]
   collaborations Collaboration[]
+  invitations    CampaignInvitation[]
+  shortlists      BrandShortlistItem[]
+  invitations     CampaignInvitation[]
   @@index([isPublic, city, state])
 }
 
@@ -361,4 +367,36 @@ model AuditLog {
   actor      User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
   @@index([entityType, entityId, createdAt])
   @@index([actorId, createdAt])
+}
+
+
+model BrandShortlistItem {
+  id               String         @id @default(cuid())
+  brandId          String
+  creatorProfileId String
+  createdAt        DateTime       @default(now())
+  brand            Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  @@unique([brandId, creatorProfileId])
+  @@index([brandId, createdAt])
+}
+
+model CampaignInvitation {
+  id               String         @id @default(cuid())
+  brandId          String
+  campaignId       String
+  creatorProfileId String
+  invitedByUserId  String
+  status           String         @default("PENDING")
+  note             String?
+  proposedRate     Int?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  brand            Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  campaign         Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  invitedBy        User            @relation(fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  @@unique([campaignId, creatorProfileId])
+  @@index([creatorProfileId, status, createdAt])
+  @@index([brandId, createdAt])
 }
