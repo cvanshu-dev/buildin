@@ -41,35 +41,35 @@ export function ExpertiseSection() {
   return (
     <section
       id="services"
-      className="border-t border-white/10 bg-[#151515] px-5 py-24 sm:px-8 lg:px-12 lg:py-32"
+      className="border-t border-slate-200 bg-slate-50 px-5 py-24 sm:px-8 lg:px-12 lg:py-32"
     >
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-16 grid gap-6 md:grid-cols-2 md:items-end">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
               Expertise // 2026
             </p>
 
             <h2 className="mt-5 text-5xl font-semibold tracking-[-0.07em] sm:text-7xl">
               Built around
               <br />
-              <span className="text-neutral-500">collaboration.</span>
+              <span className="text-slate-500">collaboration.</span>
             </h2>
           </div>
 
-          <p className="max-w-md text-sm leading-7 text-neutral-400 md:justify-self-end">
+          <p className="max-w-md text-sm leading-7 text-slate-600 md:justify-self-end">
             From discovering the right talent to managing complete
             collaborations, everything happens through one connected platform.
           </p>
         </div>
 
-        <div className="border-t border-white/15">
+        <div className="border-t border-slate-200">
           {expertise.map((item) => (
             <article
               key={item.number}
-              className="grid gap-8 border-b border-white/15 py-10 md:grid-cols-[100px_1fr_1fr] lg:py-14"
+              className="grid gap-8 border-b border-slate-200 py-10 md:grid-cols-[100px_1fr_1fr] lg:py-14"
             >
-              <p className="text-xs tracking-widest text-neutral-500">
+              <p className="text-xs tracking-widest text-slate-500">
                 {item.number}
               </p>
 
@@ -78,12 +78,12 @@ export function ExpertiseSection() {
                   {item.title}
                 </h3>
 
-                <p className="mt-4 max-w-sm text-sm leading-7 text-neutral-400">
+                <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
                   {item.description}
                 </p>
               </div>
 
-              <ul className="grid grid-cols-2 gap-x-5 gap-y-4 self-end text-xs text-neutral-400 md:justify-self-end lg:w-[340px]">
+              <ul className="grid grid-cols-2 gap-x-5 gap-y-4 self-end text-xs text-slate-600 md:justify-self-end lg:w-[340px]">
                 {item.services.map((service) => (
                   <li key={service} className="flex items-center gap-2">
                     <span className="h-1 w-1 bg-neutral-500" />

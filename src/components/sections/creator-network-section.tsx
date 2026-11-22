@@ -25,7 +25,7 @@ export function CreatorNetworkSection() {
       <div className="mx-auto max-w-[1400px]">
         <div className="grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-end">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
               The creator network
             </p>
 
@@ -34,12 +34,12 @@ export function CreatorNetworkSection() {
               <br />
               moves culture
               <br />
-              <span className="text-neutral-500">and drives growth.</span>
+              <span className="text-slate-500">and drives growth.</span>
             </h2>
           </div>
 
           <div>
-            <p className="max-w-md text-sm leading-7 text-neutral-400">
+            <p className="max-w-md text-sm leading-7 text-slate-600">
               Discover creators across fashion, beauty, lifestyle, fitness,
               travel, UGC and more. Build your profile, showcase your work and
               connect with brands looking for your creative perspective.
@@ -60,7 +60,7 @@ export function CreatorNetworkSection() {
             <Link
               href="/for-creators"
               key={creator.name}
-              className={`group relative block overflow-hidden bg-neutral-800 ${
+              className={`group relative block overflow-hidden bg-slate-200 ${
                 index === 1 ? "sm:mt-12" : ""
               }`}
             >
@@ -76,7 +76,7 @@ export function CreatorNetworkSection() {
 
                 <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                   <div>
-                    <p className="text-[9px] tracking-[0.2em] text-white/60">
+                    <p className="text-[9px] tracking-[0.2em] text-slate-900/60">
                       CREATOR CATEGORY
                     </p>
 

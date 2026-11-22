@@ -157,11 +157,11 @@ export function ProfileWorkspace({
   const input = (key: string, label: string) => (
     <label
       key={key}
-      className="block text-sm text-zinc-400"
+      className="block text-sm text-slate-600"
     >
       {label}
       <input
-        className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white"
+        className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-900"
         value={form[key] ?? ""}
         onChange={(event) =>
           updateField(key, event.target.value)
@@ -358,11 +358,11 @@ export function ProfileWorkspace({
   }
 
   const panel =
-    "rounded-2xl border border-white/10 bg-white/[.03] p-5";
+    "rounded-2xl border border-slate-200 bg-white p-5";
 
   if (!profile) {
     return (
-      <p className="mt-8 text-sm text-zinc-400">
+      <p className="mt-8 text-sm text-slate-600">
         {message || "Loading profile…"}
       </p>
     );
@@ -407,7 +407,7 @@ export function ProfileWorkspace({
         <button
           disabled={busy}
           onClick={save}
-          className="mt-5 rounded-full bg-lime-300 px-6 py-3 text-sm font-semibold text-black disabled:opacity-50"
+          className="mt-5 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white disabled:opacity-50"
         >
           Save profile
         </button>
@@ -419,14 +419,14 @@ export function ProfileWorkspace({
           <section className={panel}>
             <h2 className="font-semibold">Portfolio</h2>
 
-            <p className="mt-1 text-xs text-zinc-400">
+            <p className="mt-1 text-xs text-slate-600">
               Provide a hosted media URL. Direct uploads are not
               enabled yet.
             </p>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <input
-                className="rounded-xl bg-white/5 p-3"
+                className="rounded-xl bg-slate-50 p-3"
                 placeholder="Project title"
                 value={title}
                 onChange={(event) =>
@@ -435,7 +435,7 @@ export function ProfileWorkspace({
               />
 
               <input
-                className="rounded-xl bg-white/5 p-3"
+                className="rounded-xl bg-slate-50 p-3"
                 placeholder="Public media URL"
                 value={url}
                 onChange={(event) =>
@@ -456,7 +456,7 @@ export function ProfileWorkspace({
               {(profile.portfolioItems ?? []).map((item) => (
                 <li
                   key={item.id}
-                  className="flex justify-between rounded-lg border border-white/10 p-3 text-sm"
+                  className="flex justify-between rounded-lg border border-slate-200 p-3 text-sm"
                 >
                   {item.title}
 
@@ -464,7 +464,7 @@ export function ProfileWorkspace({
                     href={item.mediaUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-lime-300"
+                    className="text-blue-700"
                   >
                     Open
                   </a>
@@ -499,7 +499,7 @@ export function ProfileWorkspace({
               </select>
 
               <input
-                className="rounded-xl bg-white/5 p-3"
+                className="rounded-xl bg-slate-50 p-3"
                 placeholder="@handle"
                 value={handle}
                 onChange={(event) =>
@@ -508,7 +508,7 @@ export function ProfileWorkspace({
               />
 
               <input
-                className="rounded-xl bg-white/5 p-3"
+                className="rounded-xl bg-slate-50 p-3"
                 placeholder="Profile URL"
                 value={url}
                 onChange={(event) =>
@@ -529,7 +529,7 @@ export function ProfileWorkspace({
               {(profile.socialAccounts ?? []).map((account) => (
                 <li
                   key={account.id}
-                  className="rounded-lg border border-white/10 p-3 text-sm"
+                  className="rounded-lg border border-slate-200 p-3 text-sm"
                 >
                   {account.platform} · {account.handle}
                 </li>
@@ -549,12 +549,12 @@ export function ProfileWorkspace({
               ✓ Your {type === "BRAND" ? "brand" : "creator"} is verified
             </p>
 
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-slate-600">
               Your verification request has been approved.
             </p>
 
             {verification.reviewedAt && (
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-slate-500">
                 Approved on{" "}
                 {new Date(
                   verification.reviewedAt
@@ -568,7 +568,7 @@ export function ProfileWorkspace({
               Verification pending
             </p>
 
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-slate-600">
               Your profile is currently under manual review.
             </p>
           </div>
@@ -581,14 +581,14 @@ export function ProfileWorkspace({
                 </p>
 
                 {verification.reviewNote && (
-                  <p className="mt-1 text-sm text-zinc-400">
+                  <p className="mt-1 text-sm text-slate-600">
                     Reason: {verification.reviewNote}
                   </p>
                 )}
               </div>
             )}
 
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-slate-600">
               Submit your profile for manual review. Do not upload
               passwords or payment details.
             </p>
@@ -596,7 +596,7 @@ export function ProfileWorkspace({
             <button
               disabled={busy}
               onClick={requestVerification}
-              className="mt-3 rounded-full border border-lime-300/40 px-5 py-2 text-sm text-lime-200 disabled:opacity-50"
+              className="mt-3 rounded-full border border-lime-300/40 px-5 py-2 text-sm text-blue-700 disabled:opacity-50"
             >
               {verification?.status === "REJECTED"
                 ? "Resubmit verification"
@@ -607,7 +607,7 @@ export function ProfileWorkspace({
       </section>
 
       {message && (
-        <p role="status" className="text-sm text-zinc-300">
+        <p role="status" className="text-sm text-slate-700">
           {message}
         </p>
       )}
