@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 type Tab = "overview" | "campaigns" | "creators" | "applications" | "collaborations" | "profile" | "notifications" | "finance";
@@ -8,6 +8,7 @@ type Campaign = { id:string; title:string; brief:string; status:string; manageme
 type Creator = { id:string; displayName:string|null; bio:string|null; city:string|null; state:string|null; categories:string[]; specialties:string[]; portfolioItems:{id:string;title:string;mediaUrl:string;mediaType:string}[]; socialAccounts:{platform:string;handle:string;followers:number|null}[] };
 type Application = { id:string; pitch:string; proposedRate:number|null; status:string; createdAt:string; creatorProfile:{id:string;displayName:string|null;city:string|null;state:string|null;categories:string[];specialties:string[];socialAccounts:{platform:string;followers:number|null}[]} };
 type Collaboration = { id:string; status:string; agreedAmount:number|null; campaign:{id:string;title:string}; creatorProfile:{id:string;displayName:string|null;city:string|null;state:string|null;socialAccounts:{platform:string;followers:number|null}[]}; deliverables:{id:string;title:string;status:string;dueAt:string|null;assetUrl:string|null}[]; agreement:{id:string;title:string;status:string;currentVersion:number}|null; _count:{messages:number} };
+type NotificationItem = { id: string; title: string; body: string; createdAt: string; readAt: string | null };
 type Overview = { campaignCounts:Record<string,number>; totalApplications:number; pendingApplications:number; collaborations:Collaboration[]; unreadNotifications:number; committedBudget:number };
 const money=(n:number|null|undefined)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n??0);
 const panel="rounded-2xl border border-white/10 bg-white/[.035] p-5";
@@ -16,7 +17,7 @@ const btn="rounded-xl bg-lime-300 px-4 py-2.5 text-sm font-semibold text-black d
 const muted="text-sm text-zinc-400";
 const nav:[Tab,string,string][]=[["overview","Overview","⌂"],["campaigns","Campaigns","▤"],["creators","Find creators","◎"],["applications","Applications","↗"],["collaborations","Collaborations","◇"],["profile","Brand profile","◉"],["notifications","Notifications","♧"],["finance","Finance","₹"]];
 export function BrandDashboard({brandName,brandLogo}:{brandName:string;brandLogo:string|null}) {
- const [tab,setTab]=useState<Tab>("overview"),[overview,setOverview]=useState<Overview|null>(null),[campaigns,setCampaigns]=useState<Campaign[]>([]),[creators,setCreators]=useState<Creator[]>([]),[collaborations,setCollaborations]=useState<Collaboration[]>([]),[applications,setApplications]=useState<Application[]>([]),[selectedCampaign,setSelectedCampaign]=useState(""),[query,setQuery]=useState(""),[city,setCity]=useState(""),[category,setCategory]=useState(""),[platform,setPlatform]=useState(""),[message,setMessage]=useState(""),[busy,setBusy]=useState(false),[notifications,setNotifications]=useState<any[]>([]);
+ const [tab,setTab]=useState<Tab>("overview"),[overview,setOverview]=useState<Overview|null>(null),[campaigns,setCampaigns]=useState<Campaign[]>([]),[creators,setCreators]=useState<Creator[]>([]),[collaborations,setCollaborations]=useState<Collaboration[]>([]),[applications,setApplications]=useState<Application[]>([]),[selectedCampaign,setSelectedCampaign]=useState(""),[query,setQuery]=useState(""),[city,setCity]=useState(""),[category,setCategory]=useState(""),[platform,setPlatform]=useState(""),[message,setMessage]=useState(""),[busy,setBusy]=useState(false),[notifications,setNotifications]=useState<NotificationItem[]>([]);
  const [form,setForm]=useState({title:"",brief:"",objectives:"",categories:"",platforms:"INSTAGRAM",location:"",budgetMin:"",budgetMax:"",slots:"1",applicationDeadline:"",startDate:"",endDate:"",managementMode:"SELF_SERVICE"});
  const [profile,setProfile]=useState<Record<string,string>>({});
  const request=async(url:string,init?:RequestInit)=>{const r=await fetch(url,{...init,headers:{"Content-Type":"application/json",...(init?.headers||{})},cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"Request failed");return d;};

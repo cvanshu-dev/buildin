@@ -1,1 +1,10 @@
-import {redirect} from "next/navigation";import {getCurrentUser} from "@/lib/current-user";import {DashboardShell} from "@/components/dashboard-shell";import {isStaffRole} from "@/lib/roles";import {VerificationQueue} from "@/components/verification-queue";export default async function AdminDashboard(){const user=await getCurrentUser();if(!user||!isStaffRole(user.role))redirect("/dashboard");return <DashboardShell title="Verification operations" role={user.role.replaceAll("_"," ")}><p className="mt-5 text-sm text-zinc-400">Review brand and creator verification requests.</p><VerificationQueue/></DashboardShell>;}
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/current-user";
+import { isStaffRole } from "@/lib/roles";
+import { AdminDashboard } from "@/components/admin-dashboard";
+export const dynamic = "force-dynamic";
+export default async function AdminDashboardPage() {
+  const user = await getCurrentUser();
+  if (!user || !isStaffRole(user.role)) redirect("/dashboard");
+  return <AdminDashboard role={user.role} name={user.name} />;
+}
