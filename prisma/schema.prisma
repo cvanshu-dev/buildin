@@ -127,7 +127,6 @@ model CreatorProfile {
   socialAccounts SocialAccount[]
   applications   CampaignApplication[]
   collaborations Collaboration[]
-  invitations    CampaignInvitation[]
   shortlists      BrandShortlistItem[]
   invitations     CampaignInvitation[]
   @@index([isPublic, city, state])
@@ -230,6 +229,7 @@ model Campaign {
   assignedManager User?    @relation("CampaignManager", fields: [assignedManagerId], references: [id], onDelete: SetNull)
   applications   CampaignApplication[]
   collaborations Collaboration[]
+  invitations    CampaignInvitation[]
   @@index([status, createdAt])
   @@index([brandId, status])
   @@index([assignedManagerId, status])
