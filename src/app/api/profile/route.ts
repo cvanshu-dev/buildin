@@ -84,6 +84,40 @@ export async function PUT(request: Request) {
     }
 
     const { isPublic, ...profileData } = parsed.data;
+
+    if (isPublic === true) {
+      const existing = await prisma.creatorProfile.findUnique({
+        where: { userId: user.id },
+        select: {
+          displayName: true,
+          bio: true,
+          city: true,
+          state: true,
+          categories: true,
+          specialties: true,
+          portfolioItems: { select: { id: true }, take: 1 },
+          socialAccounts: { select: { id: true }, take: 1 },
+        },
+      });
+
+      const hasCompleteProfile =
+        Boolean(profileData.displayName?.trim()) &&
+        Boolean(profileData.bio?.trim()) &&
+        Boolean(profileData.city?.trim()) &&
+        Boolean(profileData.state?.trim()) &&
+        profileData.categories.length > 0 &&
+        profileData.specialties.length > 0 &&
+        Boolean(existing?.portfolioItems.length) &&
+        Boolean(existing?.socialAccounts.length);
+
+      if (!hasCompleteProfile) {
+        return NextResponse.json(
+          { error: "Complete all eight profile checklist items before publishing." },
+          { status: 400 },
+        );
+      }
+    }
+
     const profile = await prisma.creatorProfile.update({
       where: { userId: user.id },
       data: {

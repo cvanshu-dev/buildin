@@ -210,6 +210,7 @@ export function ProfileWorkspace({
 
       setMessage("Profile saved.");
       await load();
+      if (type === "CREATOR") window.dispatchEvent(new Event("creator-profile-updated"));
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Save failed."
@@ -252,6 +253,7 @@ export function ProfileWorkspace({
       setMessage("Portfolio item added.");
 
       await load();
+      window.dispatchEvent(new Event("creator-profile-updated"));
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -296,6 +298,7 @@ export function ProfileWorkspace({
       setMessage("Social account saved.");
 
       await load();
+      window.dispatchEvent(new Event("creator-profile-updated"));
     } catch (error) {
       setMessage(
         error instanceof Error
