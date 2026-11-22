@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 type Tab = "Overview" | "Users" | "Campaigns" | "Applications" | "Verifications" | "Collaborations" | "Staff" | "Audit";
+// API payloads are heterogeneous across the admin tables; keep this boundary explicit.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
 type Overview = {
   metrics: { users: number; brands: number; creators: number; pendingVerifications: number; committedAmount: number };
