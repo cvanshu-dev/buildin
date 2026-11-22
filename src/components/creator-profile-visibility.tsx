@@ -104,30 +104,30 @@ export function CreatorProfileVisibility() {
   if (!profile) return null;
 
   return (
-    <section className="mt-8 rounded-2xl border border-white/10 bg-white/[.03] p-5">
+    <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Profile completeness</h2>
-          <p className="mt-1 text-sm text-zinc-400">Complete these details to make your profile more useful to brands.</p>
+          <p className="mt-1 text-sm text-slate-600">Complete these details to make your profile more useful to brands.</p>
         </div>
-        <p className="text-2xl font-semibold text-lime-300">{Math.round(percentage)}%</p>
+        <p className="text-2xl font-semibold text-blue-700">{Math.round(percentage)}%</p>
       </div>
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-lime-300 transition-all" style={{ width: percentage + "%" }} />
+        <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: percentage + "%" }} />
       </div>
       <ul className="mt-5 grid gap-3 sm:grid-cols-2">
         {checks.map((check, index) => (
           <li key={check.key} className="flex items-center gap-2 text-sm">
-            <span className={completed[index] ? "text-lime-300" : "text-zinc-500"}>{completed[index] ? "✓" : "○"}</span>
-            <span className={completed[index] ? "text-zinc-200" : "text-zinc-400"}>{check.label}</span>
+            <span className={completed[index] ? "text-blue-700" : "text-slate-500"}>{completed[index] ? "✓" : "○"}</span>
+            <span className={completed[index] ? "text-slate-800" : "text-slate-600"}>{check.label}</span>
           </li>
         ))}
       </ul>
-      <div className="mt-6 border-t border-white/10 pt-5">
+      <div className="mt-6 border-t border-slate-200 pt-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-medium">Public profile</h3>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-slate-600">
               {profile.isPublic ? "Anyone with your profile link can view your public creator information." : "Your profile is private and hidden from public visitors."}
             </p>
           </div>
@@ -135,7 +135,7 @@ export function CreatorProfileVisibility() {
             type="button"
             disabled={busy || (!profile.isPublic && !isComplete)}
             onClick={toggleVisibility}
-            className="rounded-full border border-lime-300/40 px-5 py-2 text-sm text-lime-200 disabled:opacity-50"
+            className="rounded-full border border-lime-300/40 px-5 py-2 text-sm text-blue-700 disabled:opacity-50"
           >
             {busy ? "Saving…" : profile.isPublic ? "Make profile private" : isComplete ? "Make profile public" : "Complete profile to publish"}
           </button>
@@ -146,11 +146,11 @@ export function CreatorProfileVisibility() {
           </p>
         )}
         {profile.isPublic && (
-          <a href={"/creators/" + profile.id} target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm text-lime-300 underline underline-offset-4">
+          <a href={"/creators/" + profile.id} target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm text-blue-700 underline underline-offset-4">
             Preview public profile
           </a>
         )}
-        {message && <p role="status" className="mt-3 text-sm text-zinc-300">{message}</p>}
+        {message && <p role="status" className="mt-3 text-sm text-slate-700">{message}</p>}
       </div>
     </section>
   );

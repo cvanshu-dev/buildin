@@ -44,17 +44,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return <div className="mt-8 space-y-5">
     <form onSubmit={handleSubmit} className="space-y-4">
-      {isSignUp && <label className="block text-sm text-zinc-300">Full name<input required autoComplete="name" maxLength={100} value={name} onChange={e => setName(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 py-3 text-white outline-none focus:border-lime-300" placeholder="Your full name" /></label>}
-      <label className="block text-sm text-zinc-300">Email address<input required type="email" autoComplete="email" maxLength={254} value={email} onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 py-3 text-white outline-none focus:border-lime-300" placeholder="you@example.com" /></label>
-      <label className="block text-sm text-zinc-300">Password<input required type="password" minLength={10} maxLength={128} autoComplete={isSignUp ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 py-3 text-white outline-none focus:border-lime-300" placeholder="At least 10 characters" /></label>
-      {!isSignUp && <div className="text-right"><Link href="/forgot-password" className="text-sm text-lime-200 hover:text-lime-100">Forgot password?</Link></div>}
+      {isSignUp && <label className="block text-sm text-slate-700">Full name<input required autoComplete="name" maxLength={100} value={name} onChange={e => setName(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-blue-600" placeholder="Your full name" /></label>}
+      <label className="block text-sm text-slate-700">Email address<input required type="email" autoComplete="email" maxLength={254} value={email} onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-blue-600" placeholder="you@example.com" /></label>
+      <label className="block text-sm text-slate-700">Password<input required type="password" minLength={10} maxLength={128} autoComplete={isSignUp ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-blue-600" placeholder="At least 10 characters" /></label>
+      {!isSignUp && <div className="text-right"><Link href="/forgot-password" className="text-sm text-blue-700 hover:text-blue-800">Forgot password?</Link></div>}
       {error && <p role="alert" className="rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-sm text-red-300">{error}</p>}
-      <button disabled={loading} className="w-full rounded-full bg-lime-300 px-6 py-3.5 font-semibold text-black transition hover:bg-lime-200 disabled:opacity-50">{loading ? "Please wait..." : isSignUp ? "Create account" : "Log in"}</button>
+      <button disabled={loading} className="w-full rounded-full bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50">{loading ? "Please wait..." : isSignUp ? "Create account" : "Log in"}</button>
     </form>
     {googleEnabled && <>
-      <div className="relative flex items-center"><div className="h-px flex-1 bg-white/10"/><span className="px-3 text-xs text-zinc-500">OR</span><div className="h-px flex-1 bg-white/10"/></div>
-      <button type="button" onClick={handleGoogle} disabled={loading} className="w-full rounded-full border border-white/15 px-6 py-3.5 text-sm font-medium text-white transition hover:bg-white/5 disabled:opacity-50">Continue with Google</button>
+      <div className="relative flex items-center"><div className="h-px flex-1 bg-slate-100"/><span className="px-3 text-xs text-slate-500">OR</span><div className="h-px flex-1 bg-slate-100"/></div>
+      <button type="button" onClick={handleGoogle} disabled={loading} className="w-full rounded-full border border-slate-200 px-6 py-3.5 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:opacity-50">Continue with Google</button>
     </>}
-    <p className="text-center text-sm text-zinc-400">{isSignUp ? "Already have an account?" : "New to the platform?"} {" "}<Link className="text-lime-200 hover:text-lime-100" href={isSignUp ? "/sign-in" : "/sign-up"}>{isSignUp ? "Log in" : "Create an account"}</Link></p>
+    <p className="text-center text-sm text-slate-600">{isSignUp ? "Already have an account?" : "New to the platform?"} {" "}<Link className="text-blue-700 hover:text-blue-800" href={isSignUp ? "/sign-in" : "/sign-up"}>{isSignUp ? "Log in" : "Create an account"}</Link></p>
   </div>;
 }

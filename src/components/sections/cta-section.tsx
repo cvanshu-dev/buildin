@@ -5,10 +5,10 @@ export function CTASection() {
   return (
     <section
       id="contact"
-      className="bg-white px-5 py-24 text-black sm:px-8 lg:px-12 lg:py-36"
+      className="bg-blue-600 px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36"
     >
       <div className="mx-auto max-w-[1400px]">
-        <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
           Your next collaboration starts here
         </p>
 
@@ -20,15 +20,15 @@ export function CTASection() {
           IMPOSSIBLE TO IGNORE.
         </h2>
 
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-8 border-t border-black/20 pt-8">
-          <p className="max-w-sm text-sm leading-7 text-neutral-600">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-8 border-t border-white/20 pt-8">
+          <p className="max-w-sm text-sm leading-7 text-blue-100">
             Whether you are building a brand campaign or growing as a creator,
             the right collaboration begins here.
           </p>
 
           <Link
             href="/sign-up"
-            className="group inline-flex items-center gap-5 bg-black px-7 py-5 text-[10px] font-semibold tracking-[0.18em] text-white transition hover:bg-neutral-800"
+            className="group inline-flex items-center gap-5 bg-white px-7 py-5 text-[10px] font-semibold tracking-[0.18em] text-blue-700 transition hover:bg-blue-50"
           >
             START A PROJECT
             <ArrowUpRight

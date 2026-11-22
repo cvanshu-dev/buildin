@@ -10,7 +10,7 @@ import { FooterSection } from "@/components/sections/footer-section";
 
 export default function HomePage() {
   return (
-    <main className="overflow-hidden bg-[#101010] text-white">
+    <main className="overflow-hidden bg-slate-50 text-slate-900">
       <SiteHeader />
 
       <HeroSection />

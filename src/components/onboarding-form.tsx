@@ -110,9 +110,9 @@ export function OnboardingForm() {
   }
 
   const inputClass =
-    "mt-2 w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-lime-300";
+    "mt-2 w-full rounded-xl border border-slate-200 bg-white/[0.05] px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-lime-300";
 
-  const labelClass = "block text-sm font-medium text-zinc-300";
+  const labelClass = "block text-sm font-medium text-slate-700";
 
   return (
     <div className="mt-10 space-y-6">
@@ -139,14 +139,14 @@ export function OnboardingForm() {
             }}
             className={`rounded-2xl border p-5 text-left transition ${
               role === option.value
-                ? "border-lime-300 bg-lime-300/10"
-                : "border-white/10 bg-white/[.03] hover:border-white/30"
+                ? "border-lime-300 bg-blue-50"
+                : "border-slate-200 bg-white hover:border-white/30"
             }`}
           >
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-slate-900">
               {option.title}
             </span>
-            <span className="mt-2 block text-sm text-zinc-400">
+            <span className="mt-2 block text-sm text-slate-600">
               {option.detail}
             </span>
           </button>
@@ -156,7 +156,7 @@ export function OnboardingForm() {
       {/* Brand form */}
       {role === "BRAND" && (
         <div className="space-y-5">
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-slate-900">
             Brand information
           </h2>
 
@@ -285,7 +285,7 @@ export function OnboardingForm() {
       {/* Creator form */}
       {role === "CREATOR" && (
         <div className="space-y-5">
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-slate-900">
             Creator information
           </h2>
 
@@ -340,7 +340,7 @@ export function OnboardingForm() {
               value={form.categories}
               onChange={(e) => updateField("categories", e.target.value)}
             />
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-slate-500">
               Separate multiple categories with commas.
             </p>
           </div>
@@ -377,12 +377,12 @@ export function OnboardingForm() {
         type="button"
         disabled={loading}
         onClick={submit}
-        className="w-full rounded-full bg-lime-300 px-6 py-4 font-semibold text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-full bg-blue-600 px-6 py-4 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Saving your details..." : "Complete onboarding"}
       </button>
 
-      <p className="text-center text-xs text-zinc-500">
+      <p className="text-center text-xs text-slate-500">
         Fields marked with * are required.
       </p>
     </div>

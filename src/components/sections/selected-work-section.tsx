@@ -36,23 +36,23 @@ export function SelectedWorkSection() {
   return (
     <section
       id="work"
-      className="bg-[#151515] px-5 py-24 sm:px-8 lg:px-12 lg:py-32"
+      className="bg-slate-50 px-5 py-24 sm:px-8 lg:px-12 lg:py-32"
     >
       <div className="mx-auto max-w-[1400px]">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">
               Campaigns / Creative / Collaborations
             </p>
 
             <h2 className="mt-5 text-5xl font-semibold tracking-[-0.07em] sm:text-7xl">
               Selected
               <br />
-              <span className="text-neutral-500">work.</span>
+              <span className="text-slate-500">work.</span>
             </h2>
           </div>
 
-          <p className="max-w-xs text-sm leading-7 text-neutral-400">
+          <p className="max-w-xs text-sm leading-7 text-slate-600">
             A glimpse into the worlds, stories and creative possibilities brands
             can build with the right talent.
           </p>
@@ -65,7 +65,7 @@ export function SelectedWorkSection() {
               className={index % 2 === 1 ? "md:mt-24" : ""}
             >
               <Link href="/sign-up" className="group block">
-                <div className="relative aspect-[1.18/1] overflow-hidden bg-neutral-800">
+                <div className="relative aspect-[1.18/1] overflow-hidden bg-slate-200">
                   <div
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                     style={{
@@ -73,7 +73,7 @@ export function SelectedWorkSection() {
                     }}
                   />
 
-                  <span className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/50 text-white transition group-hover:bg-white group-hover:text-black">
+                  <span className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/50 text-slate-900 transition group-hover:bg-white group-hover:text-white">
                     <MoveUpRight size={17} />
                   </span>
                 </div>
@@ -84,12 +84,12 @@ export function SelectedWorkSection() {
                       {project.name}
                     </h3>
 
-                    <p className="mt-2 text-[9px] tracking-[0.18em] text-neutral-500">
+                    <p className="mt-2 text-[9px] tracking-[0.18em] text-slate-500">
                       {project.category}
                     </p>
                   </div>
 
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-slate-500">
                     /{project.number}
                   </span>
                 </div>
@@ -98,7 +98,7 @@ export function SelectedWorkSection() {
           ))}
         </div>
 
-        <div className="mt-20 border-t border-white/15 pt-8">
+        <div className="mt-20 border-t border-slate-200 pt-8">
           <Link
             href="/sign-up"
             className="group inline-flex items-center gap-4 text-xs tracking-[0.18em]"

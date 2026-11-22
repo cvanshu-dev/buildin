@@ -8,5 +8,5 @@ export default async function BrandCollaborationPage({params}:{params:Promise<{i
  const {id}=await params;
  const access=await prisma.collaboration.findFirst({where:{id,campaign:{brand:{members:{some:{userId:user.id,title:"Owner"}}}}},select:{id:true}});
  if(!access)notFound();
- return <main className="min-h-screen bg-[#0b0d0e] px-4 py-8 text-white sm:px-8"><div className="mx-auto max-w-5xl"><BrandCollaborationWorkspace id={id}/></div></main>;
+ return <main className="min-h-screen bg-[#0b0d0e] px-4 py-8 text-slate-900 sm:px-8"><div className="mx-auto max-w-5xl"><BrandCollaborationWorkspace id={id}/></div></main>;
 }

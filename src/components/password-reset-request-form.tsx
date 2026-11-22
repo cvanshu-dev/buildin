@@ -11,9 +11,9 @@ export function PasswordResetRequestForm(){
   finally{setBusy(false);}
  }
  return <form onSubmit={submit} className="mt-8 space-y-5">
-  <label className="block text-sm text-zinc-300">Email address<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 py-3 text-white outline-none focus:border-lime-300"/></label>
-  <button disabled={busy} className="w-full rounded-full bg-lime-300 px-6 py-3.5 font-semibold text-black disabled:opacity-50">{busy?"Sending...":"Send reset link"}</button>
-  {message&&<p role="status" className="text-sm text-zinc-300">{message}</p>}
-  <p className="text-center text-sm text-zinc-400"><Link href="/sign-in" className="text-lime-200">Back to sign in</Link></p>
+  <label className="block text-sm text-slate-700">Email address<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-lime-300"/></label>
+  <button disabled={busy} className="w-full rounded-full bg-blue-600 px-6 py-3.5 font-semibold text-white disabled:opacity-50">{busy?"Sending...":"Send reset link"}</button>
+  {message&&<p role="status" className="text-sm text-slate-700">{message}</p>}
+  <p className="text-center text-sm text-slate-600"><Link href="/sign-in" className="text-blue-700">Back to sign in</Link></p>
  </form>;
 }
