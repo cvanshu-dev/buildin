@@ -27,7 +27,7 @@ export async function PATCH(request:Request){
     const current=await tx.campaignApplication.findUnique({where:{campaignId_creatorProfileId:{campaignId:invitation.campaignId,creatorProfileId:profile.id}},select:{id:true,status:true}});
     if(current?.status==="REJECTED")throw new Error("APPLICATION_REJECTED");
     const accepted=await tx.campaignApplication.count({where:{campaignId:invitation.campaignId,status:"ACCEPTED"}});
-    if(!current&&accepted>=invitation.campaign.slots)throw new Error("CAMPAIGN_FULL");
+    if(current?.status!=="ACCEPTED"&&accepted>=invitation.campaign.slots)throw new Error("CAMPAIGN_FULL");
     const application=current?await tx.campaignApplication.update({where:{id:current.id},data:{status:"ACCEPTED",...(invitation.proposedRate!==null?{proposedRate:invitation.proposedRate}:{})}}):await tx.campaignApplication.create({data:{campaignId:invitation.campaignId,creatorProfileId:profile.id,pitch:invitation.note?.trim()||"Accepted direct invitation from the brand.",proposedRate:invitation.proposedRate,status:"ACCEPTED"}});
     await tx.collaboration.upsert({where:{applicationId:application.id},create:{applicationId:application.id,campaignId:invitation.campaignId,creatorProfileId:profile.id,agreedAmount:invitation.proposedRate},update:{}});
    }
