@@ -1,6 +1,17 @@
-import {redirect} from "next/navigation";
-import {getCurrentUser} from "@/lib/current-user";
-import {DashboardShell} from "@/components/dashboard-shell";
-import {ProfileWorkspace} from "@/components/profile-workspace";
-import Link from "next/link";
-export default async function BrandDashboard(){const user=await getCurrentUser();if(!user||user.role!=="BRAND")redirect("/dashboard");return <DashboardShell title="Brand workspace" role="Brand"><div className="mt-5 flex gap-3"><Link className="rounded-full bg-lime-300 px-5 py-2 text-sm font-semibold text-black" href="/dashboard/brand/campaigns">Campaign management</Link></div><ProfileWorkspace type="BRAND"/></DashboardShell>;}
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/current-user";
+import { prisma } from "@/lib/prisma";
+import { BrandDashboard } from "@/components/brand-dashboard";
+
+export const dynamic = "force-dynamic";
+
+export default async function BrandDashboardPage() {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "BRAND") redirect("/dashboard");
+  const owner = await prisma.brandMember.findFirst({
+    where: { userId: user.id, title: "Owner" },
+    include: { brand: { select: { id: true, name: true, logoUrl: true } } },
+  });
+  if (!owner) redirect("/onboarding");
+  return <BrandDashboard brandName={owner.brand.name} brandLogo={owner.brand.logoUrl} />;
+}
