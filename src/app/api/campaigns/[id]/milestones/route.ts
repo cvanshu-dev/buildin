@@ -1,20 +1,14 @@
-CREATE TYPE "CollaborationMilestoneStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
-CREATE TABLE "CollaborationMilestone" (
-  "id" TEXT NOT NULL,
-  "collaborationId" TEXT NOT NULL,
-  "title" VARCHAR(120) NOT NULL,
-  "description" VARCHAR(1000),
-  "dueAt" TIMESTAMP(3),
-  "status" "CollaborationMilestoneStatus" NOT NULL DEFAULT 'PENDING',
-  "createdById" TEXT NOT NULL,
-  "completedById" TEXT,
-  "completedAt" TIMESTAMP(3),
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL,
-  CONSTRAINT "CollaborationMilestone_pkey" PRIMARY KEY ("id")
-);
-CREATE INDEX "CollaborationMilestone_collaborationId_status_idx" ON "CollaborationMilestone"("collaborationId", "status");
-CREATE INDEX "CollaborationMilestone_dueAt_status_idx" ON "CollaborationMilestone"("dueAt", "status");
-ALTER TABLE "CollaborationMilestone" ADD CONSTRAINT "CollaborationMilestone_collaborationId_fkey" FOREIGN KEY ("collaborationId") REFERENCES "Collaboration"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "Collaboration" ALTER COLUMN "status" SET DEFAULT 'PENDING_START';
-UPDATE "Collaboration" SET "status" = 'ACTIVE' WHERE "status" = 'PENDING_START';
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/current-user";
+import { prisma } from "@/lib/prisma";
+export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
+ const user=await getCurrentUser();
+ if(!user)return NextResponse.json({error:"Unauthorized"},{status:401});
+ const {id}=await context.params;
+ const collaboration=await prisma.collaboration.findFirst({
+  where:{id,OR:[{creatorProfile:{userId:user.id}},{campaign:{brand:{members:{some:{userId:user.id}}}}}]},
+  select:{id:true,milestones:{orderBy:[{dueAt:"asc"},{createdAt:"asc"}]}}
+ });
+ if(!collaboration)return NextResponse.json({error:"Collaboration not found."},{status:404});
+ return NextResponse.json({milestones:collaboration.milestones});
+}

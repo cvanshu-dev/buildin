@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
@@ -22,7 +21,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!collab) return NextResponse.json({ error: "Collaboration not found." }, { status: 404 });
   const isBrand = collab.campaign.brand.members.some(member => member.userId === user.id);
   if (!isBrand) return NextResponse.json({ error: "Only brand members can create milestones." }, { status: 403 });
-  if (!["PENDING_START", "ACTIVE"].includes(collab.status)) return NextResponse.json({ error: "Milestones cannot be added to a closed collaboration." }, { status: 409 });
+  if (collab.status !== "ACTIVE") return NextResponse.json({ error: "Milestones can only be added to an active collaboration." }, { status: 409 });
   const milestone = await prisma.collaborationMilestone.create({ data: { collaborationId: id, title: parsed.data.title, description: parsed.data.description ?? null, dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null, createdById: user.id } });
   await prisma.notification.create({ data: { userId: collab.creatorProfile.userId, type: "MILESTONE_CREATED", title: "New collaboration milestone", body: `The brand added "${milestone.title}".`, href: `/dashboard/creator/collaborations/${id}` } });
   return NextResponse.json({ milestone }, { status: 201 });
@@ -35,7 +34,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!parsed.success) return NextResponse.json({ error: "Invalid milestone update." }, { status: 400 });
   const collab = await getAccess(id, user.id);
   if (!collab) return NextResponse.json({ error: "Collaboration not found." }, { status: 404 });
-  if (!["PENDING_START", "ACTIVE"].includes(collab.status)) return NextResponse.json({ error: "Milestones on a closed collaboration cannot be changed." }, { status: 409 });
+  if (collab.status !== "ACTIVE") return NextResponse.json({ error: "Milestones on an inactive collaboration cannot be changed." }, { status: 409 });
   const isBrand = collab.campaign.brand.members.some(member => member.userId === user.id);
   const milestone = await prisma.collaborationMilestone.findFirst({ where: { id: parsed.data.milestoneId, collaborationId: id } });
   if (!milestone) return NextResponse.json({ error: "Milestone not found." }, { status: 404 });
@@ -46,7 +45,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
   if (parsed.data.action === "COMPLETE" && collab.creatorProfile.userId !== user.id) return NextResponse.json({ error: "Only the assigned creator can mark a milestone complete." }, { status: 403 });
   if (parsed.data.action === "REOPEN" && !isBrand) return NextResponse.json({ error: "Only the brand can reopen a milestone." }, { status: 403 });
-  const nextStatus = parsed.data.action === "COMPLETE" ? "COMPLETED" : "IN_PROGRESS";
+  if (parsed.data.action === "COMPLETE" && milestone.status === "COMPLETED") return NextResponse.json({ error: "Milestone is already completed." }, { status: 409 });
+  if (parsed.data.action === "REOPEN" && milestone.status !== "COMPLETED") return NextResponse.json({ error: "Only a completed milestone can be reopened." }, { status: 409 });
+  const nextStatus = parsed.data.action === "COMPLETE" ? "COMPLETED" : "PENDING";
   try {
     const updated = await prisma.$transaction(async tx => {
       const changed = await tx.collaborationMilestone.updateMany({ where: { id: milestone.id, status: milestone.status }, data: { status: nextStatus, completedAt: nextStatus === "COMPLETED" ? new Date() : null, completedById: nextStatus === "COMPLETED" ? user.id : null } });
