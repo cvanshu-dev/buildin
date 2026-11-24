@@ -84,5 +84,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "The uploaded file failed server-side ownership, type, or size validation and was rejected." }, { status: 400 });
   }
 
+  await prisma.mediaAsset.upsert({
+    where: { publicId: asset.public_id },
+    create: { ownerUserId: user.id, publicId: asset.public_id, resourceType: asset.resource_type, secureUrl: asset.secure_url, context, bytes: asset.bytes, format: asset.format ?? "unknown" },
+    update: { ownerUserId: user.id, resourceType: asset.resource_type, secureUrl: asset.secure_url, context, bytes: asset.bytes, format: asset.format ?? "unknown", linkedAt: null },
+  });
   return NextResponse.json({ ok: true, secureUrl: asset.secure_url, publicId: asset.public_id, bytes: asset.bytes, format: asset.format, resourceType: asset.resource_type });
 }
