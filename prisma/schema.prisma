@@ -31,6 +31,13 @@ model User {
   assignedCampaigns    Campaign[] @relation("CampaignManager")
   sentInvitations      CampaignInvitation[]
   mediaAssets          MediaAsset[]
+  authoredReviews      Review[]                 @relation("ReviewAuthor")
+  receivedReviews      Review[]                 @relation("ReviewRecipient")
+  reviewReports        ReviewReport[]           @relation("ReviewReporter")
+  moderatedReports     ReviewReport[]           @relation("ReviewReportModerator")
+  openedDisputes       CollaborationDispute[]   @relation("DisputeOpener")
+  resolvedDisputes     CollaborationDispute[]   @relation("DisputeResolver")
+  disputeEvidence      DisputeEvidence[]         @relation("DisputeEvidenceAuthor")
 }
 
 model Session {
@@ -96,6 +103,7 @@ model Brand {
   campaigns    Campaign[]
   shortlists   BrandShortlistItem[]
   invitations  CampaignInvitation[]
+  reviews      Review[]
 }
 
 model BrandMember {
@@ -247,6 +255,8 @@ model Collaboration {
   deliverables  Deliverable[]
   milestones    CollaborationMilestone[]
   agreement     CollaborationAgreement?
+  reviews       Review[]
+  disputes      CollaborationDispute[]
   @@index([creatorProfileId, status])
   @@index([campaignId, status])
 }
@@ -461,4 +471,83 @@ model CollaborationMilestone {
   collaboration   Collaboration                @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
   @@index([collaborationId, status])
   @@index([dueAt, status])
+}
+
+
+model Review {
+  id              String        @id @default(cuid())
+  collaborationId String
+  reviewerId      String
+  reviewerRole    String
+  targetUserId    String?
+  targetBrandId   String?
+  rating          Int
+  title           String?       @db.VarChar(100)
+  comment         String        @db.VarChar(2000)
+  status          String        @default("PUBLISHED")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  reviewer        User          @relation("ReviewAuthor", fields: [reviewerId], references: [id], onDelete: Cascade)
+  targetUser      User?         @relation("ReviewRecipient", fields: [targetUserId], references: [id], onDelete: Cascade)
+  targetBrand     Brand?        @relation(fields: [targetBrandId], references: [id], onDelete: Cascade)
+  reports         ReviewReport[]
+  @@unique([collaborationId, reviewerRole])
+  @@index([targetUserId, status, createdAt])
+  @@index([targetBrandId, status, createdAt])
+  @@index([collaborationId, status])
+}
+
+model ReviewReport {
+  id           String   @id @default(cuid())
+  reviewId     String
+  reporterId   String
+  reason       String
+  details      String?  @db.VarChar(1000)
+  status       String   @default("PENDING")
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  review       Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporter     User     @relation("ReviewReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  moderator    User?    @relation("ReviewReportModerator", fields: [reviewedById], references: [id], onDelete: SetNull)
+  @@unique([reviewId, reporterId])
+  @@index([status, createdAt])
+}
+
+model CollaborationDispute {
+  id              String        @id @default(cuid())
+  collaborationId String
+  openedById      String
+  category        String
+  title           String        @db.VarChar(140)
+  description     String        @db.VarChar(4000)
+  status          String        @default("OPEN")
+  resolutionNote  String?       @db.VarChar(2000)
+  resolvedById    String?
+  resolvedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  openedBy        User          @relation("DisputeOpener", fields: [openedById], references: [id], onDelete: Cascade)
+  resolver        User?         @relation("DisputeResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  evidence        DisputeEvidence[]
+  @@index([status, createdAt])
+  @@index([collaborationId, createdAt])
+}
+
+model DisputeEvidence {
+  id            String              @id @default(cuid())
+  disputeId     String
+  submittedById String
+  kind          String              @default("NOTE")
+  label         String              @db.VarChar(140)
+  content       String?             @db.Text
+  url           String?             @db.Text
+  referenceId   String?
+  createdAt     DateTime            @default(now())
+  dispute       CollaborationDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  submittedBy   User                @relation("DisputeEvidenceAuthor", fields: [submittedById], references: [id], onDelete: Cascade)
+  @@index([disputeId, createdAt])
 }
