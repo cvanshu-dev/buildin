@@ -24,6 +24,7 @@ export async function POST(request:Request) {
   const count=await prisma.portfolioItem.count({where:{creatorProfileId:profile.id}});
   if(count>=30) return NextResponse.json({error:"Portfolio limit is 30 items."},{status:400});
   const item=await prisma.portfolioItem.create({data:{...parsed.data,description:parsed.data.description||null,creatorProfileId:profile.id,sortOrder:count}});
+  if (parsed.data.publicId) await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: parsed.data.publicId }, data: { linkedAt: new Date() } });
   return NextResponse.json({ok:true,item},{status:201});
 }
 export async function DELETE(request:Request) {
@@ -46,5 +47,6 @@ export async function DELETE(request:Request) {
     if(!response.ok||!["ok","not found"].includes(result.result??""))return NextResponse.json({error:result.error?.message??"Cloudinary deletion failed."},{status:502});
   }
   await prisma.portfolioItem.delete({where:{id:item.id}});
+  if (item.publicId) await prisma.mediaAsset.deleteMany({ where: { ownerUserId: user.id, publicId: item.publicId } });
   return NextResponse.json({ok:true});
 }
