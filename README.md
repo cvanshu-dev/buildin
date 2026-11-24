@@ -73,17 +73,15 @@ Configure server-only `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDI
 
 Supported upload surfaces: creator avatars and portfolio media, brand logos, campaign covers, campaign brief attachments, and collaboration deliverables. Campaign briefs support up to 20 attachments, 25 MB each. Deliverable submissions support up to 10 attachments per version, 100 MB each. Avatars, logos, and campaign covers are limited to 8 MB.
 
-### Instagram public analytics
+### Social profile details
 
-Creators enter only their Instagram username. Neither creators nor Buildin connect an Instagram account, provide passwords, or use Meta OAuth. When `APIFY_API_TOKEN` is configured, the server calls the Apify `apify/instagram-scraper` Actor for public profile details and up to 12 recent posts. Set `APIFY_INSTAGRAM_ACTOR_ID` to override the Actor.
+Creators can add their public Instagram username (or another supported social platform handle) to their profile. Buildin stores the submitted handle and profile URL so brands and administrators can visit the creator's public social profile. Creators do not connect Instagram, provide passwords, or grant Buildin account access.
 
-Buildin stores timestamped snapshots with follower/following counts, average available likes/comments, average available video views, calculated engagement rate, and recent post samples. Missing or hidden values remain null and are displayed as unavailable; views are not reach or impressions. These are public-data estimates, not private Instagram Insights or audited/verified statistics. Private accounts and data hidden from logged-out visitors may not be available. Automated collection depends on a third-party scraper and Instagram's public pages, which can change or block requests. Review Instagram's terms and applicable privacy requirements before production use.
-
-Creators can run a refresh from their profile workspace. Admins can refresh during manual verification review. Public creator profiles display the latest snapshot to visitors, including brands. Configure the server-only `APIFY_API_TOKEN`; never expose it through a `NEXT_PUBLIC_*` variable.
+Buildin does not currently scrape Instagram, call Apify, collect automatic public metrics, or display Instagram analytics. Any follower or engagement figures shown elsewhere must be manually supplied and must not be described as platform-verified. Social analytics may be reconsidered as a separate future feature after its data-access and compliance requirements are resolved.
 
 ### Database migration
 
-Apply committed migrations with `npx prisma migrate deploy`, then run `npx prisma generate`. The Phase 5 migrations add campaign brief attachment records, per-submission deliverable attachment records, remove the unused platform Instagram OAuth connection and token columns, and add public Instagram analytics snapshot fields.
+Apply committed migrations with `npx prisma migrate deploy`, then run `npx prisma generate`. The Phase 5 migrations add campaign brief attachment records and per-submission deliverable attachment records. A later cleanup migration removes unused Instagram analytics-only columns while preserving creator-submitted social usernames and profile URLs.
 
 ### Media deletion
 
@@ -93,8 +91,8 @@ Configure `CRON_SECRET` and schedule authenticated GET requests to `/api/media/c
 
 ### Deployment checklist
 
-- Configure Cloudinary and `APIFY_API_TOKEN` on the deployment target; never expose API secrets through `NEXT_PUBLIC_*`.
+- Configure Cloudinary on the deployment target; never expose API secrets through `NEXT_PUBLIC_*`.
 - Apply migrations and regenerate Prisma Client.
 - Test image, video, PDF/document uploads and deletion against a real Cloudinary account.
-- Test public Instagram username analysis against public accounts; confirm private/hidden metrics remain unavailable and refresh failures are handled cleanly.
+- Test that creator social usernames save correctly and public profile links open the intended social accounts.
 - Run `npm run typecheck`, `npm run lint`, and `npm run build`, then exercise the complete flows in staging.
