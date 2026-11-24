@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowRight, Bell, BriefcaseBusiness, FileText, Inbox } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, FileText, Inbox } from "lucide-react";
 type Data={
  applications:{id:string;pitch:string;proposedRate:number|null;status:string;createdAt:string;campaign:{id:string;title:string;status:string;applicationDeadline:string|null;brand:{name:string}}}[];
  collaborations:{id:string;status:string;agreedAmount:number|null;updatedAt:string;campaign:{id:string;title:string;brand:{name:string}};deliverables:{id:string;status:string;dueAt:string|null}[];agreement:{id:string;title:string;status:string}|null;_count:{messages:number}}[];
