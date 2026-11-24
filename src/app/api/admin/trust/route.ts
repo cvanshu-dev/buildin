@@ -30,7 +30,29 @@ export async function PATCH(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid moderation action." }, { status: 400 });
   if (parsed.data.entity === "DISPUTE") {
-    const item = await prisma.collaborationDispute.findUnique({ where: { id: parsed.data.id }, include: { collaboration: { select: { id: true, campaign: { select: { title: true, brand: { select: { members: { select: { userId: true } } } } } }, creatorProfile: { select: { userId: true } } } } });
+    const item = await prisma.collaborationDispute.findUnique({
+      where: { id: parsed.data.id },
+      include: {
+        collaboration: {
+          select: {
+            id: true,
+            campaign: {
+              select: {
+                title: true,
+                brand: {
+                  select: {
+                    members: { select: { userId: true } },
+                  },
+                },
+              },
+            },
+            creatorProfile: {
+              select: { userId: true },
+            },
+          },
+        },
+      },
+    });
     if (!item) return NextResponse.json({ error: "Dispute not found." }, { status: 404 });
     const allowed = parsed.data.action === "UNDER_REVIEW" ? ["OPEN"] : parsed.data.action === "RESOLVE" || parsed.data.action === "REJECT" ? ["OPEN", "UNDER_REVIEW"] : ["RESOLVED", "REJECTED"];
     if (!allowed.includes(item.status)) return NextResponse.json({ error: "This dispute action is not available in its current state." }, { status: 409 });
