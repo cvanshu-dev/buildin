@@ -8,7 +8,7 @@ type BriefAttachment = { id: string; fileName: string; url: string; bytes: numbe
 
 export default function BrandCampaigns() {
   const [items, setItems] = useState<Campaign[]>([]);
-  const [form, setForm] = useState({ title: "", brief: "", categories: "", platforms: "", budgetMin: "", budgetMax: "", slots: "1", coverImageUrl: "" });
+  const [form, setForm] = useState({ title: "", brief: "", categories: "", platforms: "", budgetMin: "", budgetMax: "", slots: "1", coverImageUrl: "", coverImagePublicId: "" });
   const [message, setMessage] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
   const [attachments, setAttachments] = useState<BriefAttachment[]>([]);
@@ -83,7 +83,7 @@ export default function BrandCampaigns() {
         <form onSubmit={create} className="mt-5 space-y-3">
           <div>
             <p className="mb-2 text-sm text-slate-600">Campaign cover image</p>
-            <MediaUploader context="campaign-cover" accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={(asset) => setForm((value) => ({ ...value, coverImageUrl: asset.secure_url }))} />
+            <MediaUploader context="campaign-cover" accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={(asset) => setForm((value) => ({ ...value, coverImageUrl: asset.secure_url, coverImagePublicId: asset.public_id }))} />
             {form.coverImageUrl && <img src={form.coverImageUrl} alt="Campaign cover preview" className="mt-3 h-36 w-full rounded-xl object-cover" />}
           </div>
           {(["title", "brief", "categories", "platforms", "budgetMin", "budgetMax", "slots"] as const).map((key) => (
