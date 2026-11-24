@@ -12,7 +12,6 @@ export function AdminTrustDashboard() {
   const [disputes, setDisputes] = useState<Row[]>([]);
   const [reports, setReports] = useState<Row[]>([]);
   const [reviewStats, setReviewStats] = useState<Record<string, number>>({});
-  const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
 
