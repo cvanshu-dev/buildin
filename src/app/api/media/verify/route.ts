@@ -64,6 +64,14 @@ export async function POST(request: Request) {
   const secret = process.env.CLOUDINARY_API_SECRET;
   if (!cloud || !key || !secret) return NextResponse.json({ error: "Cloudinary is not configured." }, { status: 503 });
 
+  const pendingAsset = await prisma.mediaAsset.findFirst({
+    where: { ownerUserId: user.id, publicId, context, resourceType: "auto", format: "pending", secureUrl: "" },
+    select: { id: true },
+  });
+  if (!pendingAsset) {
+    return NextResponse.json({ error: "No matching upload authorization was found. Request a new upload signature." }, { status: 403 });
+  }
+
   const adminUrl = `https://api.cloudinary.com/v1_1/${cloud}/resources/${resourceType}/upload/${publicId.split("/").map(encodeURIComponent).join("/")}`;
   const response = await fetch(adminUrl, { headers: { Authorization: `Basic ${Buffer.from(`${key}:${secret}`).toString("base64")}` }, cache: "no-store" });
   const asset = await response.json() as { public_id?: string; bytes?: number; format?: string; secure_url?: string; resource_type?: string; error?: { message?: string } };
@@ -88,10 +96,17 @@ export async function POST(request: Request) {
   const verifiedResourceType = asset.resource_type!;
   const verifiedSecureUrl = asset.secure_url!;
   const verifiedBytes = asset.bytes!;
-  await prisma.mediaAsset.upsert({
-    where: { publicId: verifiedPublicId },
-    create: { ownerUserId: user.id, publicId: verifiedPublicId, resourceType: verifiedResourceType, secureUrl: verifiedSecureUrl, context, bytes: verifiedBytes, format: asset.format ?? "unknown" },
-    update: { ownerUserId: user.id, resourceType: verifiedResourceType, secureUrl: verifiedSecureUrl, context, bytes: verifiedBytes, format: asset.format ?? "unknown", linkedAt: null },
+  const updated = await prisma.mediaAsset.updateMany({
+    where: { id: pendingAsset.id, ownerUserId: user.id, publicId: verifiedPublicId, context, format: "pending", linkedAt: null },
+    data: {
+      resourceType: verifiedResourceType,
+      secureUrl: verifiedSecureUrl,
+      bytes: verifiedBytes,
+      format: asset.format ?? "unknown",
+    },
   });
+  if (updated.count !== 1) {
+    return NextResponse.json({ error: "This upload authorization has already been used or expired. Request a new upload signature." }, { status: 409 });
+  }
   return NextResponse.json({ ok: true, secureUrl: verifiedSecureUrl, publicId: verifiedPublicId, bytes: verifiedBytes, format: asset.format, resourceType: verifiedResourceType });
 }
