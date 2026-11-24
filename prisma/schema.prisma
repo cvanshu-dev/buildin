@@ -260,23 +260,6 @@ model Collaboration {
   @@index([campaignId, status])
 }
 
-model CollaborationMilestone {
-  id              String   @id @default(cuid())
-  collaborationId String
-  title           String
-  description     String?
-  dueAt           DateTime?
-  status          String   @default("PENDING")
-  sortOrder       Int      @default(0)
-  submittedAt     DateTime?
-  reviewedAt      DateTime?
-  feedback        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
-  @@index([collaborationId, sortOrder])
-  @@index([collaborationId, status])
-}
 
 model CollaborationEvent {
   id              String   @id @default(cuid())
