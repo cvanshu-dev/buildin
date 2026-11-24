@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +8,7 @@ const createSchema = z.object({ title: z.string().trim().min(2).max(120), descri
 const updateSchema = z.object({ milestoneId: z.string().min(1), action: z.enum(["COMPLETE", "REOPEN", "UPDATE"]), title: z.string().trim().min(2).max(120).optional(), description: z.string().trim().max(1000).optional().nullable(), dueAt: z.string().datetime().optional().nullable() });
 async function getAccess(id: string, userId: string) {
   return prisma.collaboration.findFirst({
-    where: { id, OR: [{ creatorProfile: { userId } }, { campaign: { brand: { members: { some: { userId } } } }] },
+    where: { id, OR: [{ creatorProfile: { userId } }, { campaign: { brand: { members: { some: { userId } } } } }] },
     select: { id: true, status: true, creatorProfile: { select: { userId: true } }, campaign: { select: { brand: { select: { members: { where: { title: "Owner" }, select: { userId: true } } } } } } },
   });
 }
