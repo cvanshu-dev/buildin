@@ -20,7 +20,7 @@ type SocialAccount = {
   followers?: number | null;
   source?: string;
   profilePictureUrl?: string | null;
-  socialAccountMetricSnapshots?: Array<{ id: string; followers: number; followingCount: number | null; averageLikes: number | null; averageComments: number | null; averageViews: number | null; engagementRate: number | null; postsAnalyzed: number; source: string; recordedAt: string; recentPosts?: unknown }>;
+  socialAccountMetricSnapshots?: Array<{ id: string; followers: number | null; followingCount: number | null; averageLikes: number | null; averageComments: number | null; averageViews: number | null; engagementRate: number | null; postsAnalyzed: number; source: string; recordedAt: string; recentPosts?: unknown }>;
 };
 
 type VerificationItem = {
