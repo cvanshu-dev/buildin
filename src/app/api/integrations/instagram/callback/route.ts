@@ -56,7 +56,8 @@ export async function GET(request: NextRequest) {
     profileUrl.searchParams.set("access_token", longToken.access_token);
     const profileResponse = await fetch(profileUrl, { cache: "no-store" });
     const instagram = await profileResponse.json() as InstagramProfile & { error?: { message?: string } };
-    const instagramId = instagram.user_id ?? instagram.id;\n    if (!profileResponse.ok || !instagram.username || !instagramId) throw new Error(instagram.error?.message ?? "Unable to read Instagram profile.");
+    const instagramId = instagram.user_id ?? instagram.id;
+    if (!profileResponse.ok || !instagram.username || !instagramId) throw new Error(instagram.error?.message ?? "Unable to read Instagram profile.");
 
     const creator = await prisma.creatorProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
     if (!creator) throw new Error("Creator profile not found.");
