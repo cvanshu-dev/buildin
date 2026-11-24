@@ -11,17 +11,23 @@ export async function GET() {
 
   const appId = process.env.INSTAGRAM_APP_ID;
   const redirectUri = process.env.INSTAGRAM_REDIRECT_URI;
-  if (!appId || !redirectUri) return NextResponse.json({ error: "Instagram Login is not configured. Set INSTAGRAM_APP_ID and INSTAGRAM_REDIRECT_URI." }, { status: 503 });
+  const configId = process.env.INSTAGRAM_CONFIG_ID;
+
+  if (!appId || !redirectUri) {
+    return NextResponse.json({ error: "Instagram Login is not configured. Set INSTAGRAM_APP_ID and INSTAGRAM_REDIRECT_URI." }, { status: 503 });
+  }
+  if (!configId) {
+    return NextResponse.json({ error: "Meta Unified Login is required for this app. Set INSTAGRAM_CONFIG_ID to the Facebook Login for Business configuration ID." }, { status: 503 });
+  }
 
   const state = randomBytes(32).toString("hex");
-  const url = new URL("https://www.instagram.com/oauth/authorize");
+  const url = new URL("https://www.facebook.com/dialog/oauth");
   url.searchParams.set("client_id", appId);
+  url.searchParams.set("config_id", configId);
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", "instagram_business_basic");
   url.searchParams.set("state", state);
-  url.searchParams.set("enable_fb_login", "0");
-  url.searchParams.set("force_authentication", "1");
+  url.searchParams.set("override_default_response_type", "true");
 
   const response = NextResponse.redirect(url);
   response.cookies.set("buildin_instagram_oauth_state", state, {
