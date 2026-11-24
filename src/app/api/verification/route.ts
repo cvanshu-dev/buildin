@@ -15,7 +15,7 @@ export async function GET() {
     if (!canReview(user.role)) return NextResponse.json({ error: "Verification access is restricted to Admin and Super Admin." }, { status: 403 });
     const requests = await prisma.verificationRequest.findMany({
       orderBy: { createdAt: "asc" },
-      include: { applicant: { select: { id: true, name: true, email: true, role: true, creatorProfile: { select: { displayName: true, city: true, state: true, socialAccounts: { where: { platform: "INSTAGRAM" }, select: { id: true, handle: true, profileUrl: true, followers: true, source: true, socialAccountMetricSnapshots: { orderBy: { recordedAt: "desc" }, take: 1, select: { averageLikes: true, averageComments: true, averageViews: true, engagementRate: true, recordedAt: true } } } } } }, brandMemberships: { include: { brand: { select: { name: true } } } } } }, reviewer: { select: { name: true, email: true } } },
+      include: { applicant: { select: { id: true, name: true, email: true, role: true, creatorProfile: { select: { displayName: true, city: true, state: true, socialAccounts: { where: { platform: "INSTAGRAM" }, select: { id: true, handle: true, profileUrl: true, followers: true, source: true, socialAccountMetricSnapshots: { orderBy: { recordedAt: "desc" }, take: 1, select: { id: true, followers: true, followingCount: true, averageLikes: true, averageComments: true, averageViews: true, engagementRate: true, postsAnalyzed: true, source: true, recordedAt: true, recentPosts: true } } } } } }, brandMemberships: { include: { brand: { select: { name: true } } } } } }, reviewer: { select: { name: true, email: true } } },
     });
     return NextResponse.json({ requests });
   }
