@@ -4,6 +4,18 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
+function isCloudinaryDeliveryUrl(value: string, publicId: string) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com") return false;
+    const path = decodeURIComponent(url.pathname);
+    const uploadIndex = path.indexOf("/upload/");
+    return uploadIndex >= 0 && path.slice(uploadIndex + "/upload/".length).includes(publicId);
+  } catch {
+    return false;
+  }
+}
+
 const createSchema = z.object({
   title: z.string().trim().min(2).max(120),
   description: z.string().trim().max(1000).optional(),
@@ -75,12 +87,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       if (new Set(publicIds).size !== publicIds.length) return NextResponse.json({ error: "Duplicate deliverable attachments are not allowed." }, { status: 400 });
       const verified = await prisma.mediaAsset.findMany({
         where: { ownerUserId: user.id, publicId: { in: publicIds }, context: "deliverable", linkedAt: null },
-        select: { publicId: true, secureUrl: true, resourceType: true, bytes: true },
+        select: { publicId: true, resourceType: true, bytes: true },
       });
       const verifiedById = new Map(verified.map((asset) => [asset.publicId, asset]));
       if (verified.length !== assets.length || assets.some((asset) => {
         const stored = verifiedById.get(asset.publicId);
-        return !stored || stored.secureUrl !== asset.url || stored.resourceType !== asset.resourceType || stored.bytes !== asset.bytes;
+        return !stored || stored.resourceType !== asset.resourceType || stored.bytes !== asset.bytes ||
+          !asset.publicId.startsWith(`buildin/collaborations/${id}/deliverables/`) ||
+          !isCloudinaryDeliveryUrl(asset.url, asset.publicId);
       })) return NextResponse.json({ error: "One or more deliverable uploads are unverified, already attached, or not owned by this account." }, { status: 403 });
     }
     if (assets?.some((asset) => {
