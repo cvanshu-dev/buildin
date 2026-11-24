@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
         update: {
           handle: instagram.username, profileUrl: `https://www.instagram.com/${instagram.username}/`,
           followers: typeof instagram.followers_count === "number" ? instagram.followers_count : null,
-          instagramUserId: instagram.id, accessTokenEncrypted: encryptInstagramToken(longToken.access_token),
+          instagramUserId: String(instagramId), accessTokenEncrypted: encryptInstagramToken(longToken.access_token),
           tokenExpiresAt: expiresAt, profilePictureUrl: instagram.profile_picture_url ?? null, source: "INSTAGRAM_OAUTH",
         },
       }),
