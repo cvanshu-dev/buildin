@@ -464,25 +464,24 @@ model MediaAsset {
 }
 
 
-enum CollaborationMilestoneStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-}
-
 model CollaborationMilestone {
   id              String                       @id @default(cuid())
   collaborationId String
   title           String                       @db.VarChar(120)
   description     String?                      @db.VarChar(1000)
   dueAt           DateTime?
-  status          CollaborationMilestoneStatus @default(PENDING)
+  status          String   @default("PENDING")
+  sortOrder       Int      @default(0)
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  feedback        String?
   createdById     String
   completedById   String?
   completedAt     DateTime?
-  createdAt       DateTime                     @default(now())
-  updatedAt       DateTime                     @updatedAt
-  collaboration   Collaboration                @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  @@index([collaborationId, sortOrder])
   @@index([collaborationId, status])
   @@index([dueAt, status])
 }
