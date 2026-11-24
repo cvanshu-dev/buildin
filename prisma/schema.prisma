@@ -255,10 +255,23 @@ model Collaboration {
   deliverables  Deliverable[]
   milestones    CollaborationMilestone[]
   agreement     CollaborationAgreement?
+  events        CollaborationEvent[]
   reviews       Review[]
   disputes      CollaborationDispute[]
   @@index([creatorProfileId, status])
   @@index([campaignId, status])
+}
+
+model CollaborationEvent {
+  id              String   @id @default(cuid())
+  collaborationId String
+  actorId         String?
+  action          String
+  message         String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  @@index([collaborationId, createdAt])
 }
 
 model CollaborationMessage {
