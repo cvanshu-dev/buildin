@@ -1,23 +1,37 @@
 "use client";
-import {useCallback,useEffect,useState} from "react";
-type Metric={averageLikes:number|null;averageComments:number|null;engagementRate:number|null;recordedAt:string};
-type Social={id:string;handle:string;profileUrl:string;followers:number|null;socialAccountMetricSnapshots:Metric[]};
-type Item={id:string;status:string;note:string|null;applicant:{name:string;email:string;role:string;creatorProfile?:{displayName:string|null;city:string|null;state:string|null;socialAccounts:Social[]}|null}};
-type Analysis={followers:number|null;following:number|null;averageLikes:number|null;averageComments:number|null;engagementRate:number|null;posts:{id:string;type:string|null;likes:number|null;comments:number|null;permalink:string|null}[];note:string};
-export function VerificationQueue(){
- const [items,setItems]=useState<Item[]>([]),[message,setMessage]=useState(""),[connected,setConnected]=useState<{username:string}|null>(null),[analyses,setAnalyses]=useState<Record<string,Analysis>>({}),[busy,setBusy]=useState("");
- const load=useCallback(async()=>{const r=await fetch("/api/verification",{cache:"no-store"}),d=await r.json();if(!r.ok){setMessage(d.error??"Unable to load requests.");return;}setItems(d.requests);},[]);
- useEffect(()=>{void load();void fetch("/api/admin/instagram/status").then(r=>r.json()).then(d=>setConnected(d.account??null)).catch(()=>{});},[load]);
- async function analyse(id:string){setBusy(id);setMessage("");try{const r=await fetch("/api/admin/instagram/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({socialAccountId:id})}),d=await r.json();if(!r.ok)throw new Error(d.error??"Analysis failed.");setAnalyses(p=>({...p,[id]:d}));await load();}catch(e){setMessage(e instanceof Error?e.message:"Analysis failed.");}finally{setBusy("");}}
- async function decide(id:string,decision:"APPROVED"|"REJECTED"){const reviewNote=decision==="REJECTED"?window.prompt("Reason for rejection (optional):")??"":"";const r=await fetch("/api/verification",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,decision,reviewNote})}),d=await r.json();setMessage(r.ok?"Review saved.":d.error??"Review failed.");if(r.ok)await load();}
- return <div className="mt-8 space-y-4">
-  <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4"><div><h2 className="font-semibold">Buildin Instagram analytics connection</h2><p className="text-sm text-slate-600">{connected?("Connected as @"+connected.username):"Not connected. An admin must connect Buildin’s professional Instagram account once."}</p></div><a href="/api/integrations/instagram/start" className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white">{connected?"Reconnect account":"Connect Buildin Instagram"}</a></section>
-  {message&&<p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{message}</p>}
-  {items.length===0?<p className="rounded-xl border border-slate-200 p-5 text-sm text-slate-600">No verification requests.</p>:items.map(item=>{const socials=item.applicant.creatorProfile?.socialAccounts??[];return <article key={item.id} className="rounded-2xl border border-slate-200 p-5">
-   <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-semibold">{item.applicant.creatorProfile?.displayName||item.applicant.name}</h2><p className="text-sm text-slate-600">{item.applicant.email} · {item.applicant.role}</p><p className="text-xs text-slate-500">{[item.applicant.creatorProfile?.city,item.applicant.creatorProfile?.state].filter(Boolean).join(", ")}</p></div><span className="text-xs text-slate-600">{item.status}</span></div>
-   {item.note&&<p className="mt-3 text-sm">{item.note}</p>}
-   {item.applicant.role==="CREATOR"&&<div className="mt-4 space-y-3"><h3 className="text-sm font-semibold">Instagram reach analysis</h3>{socials.length===0?<p className="text-sm text-amber-700">No Instagram account submitted.</p>:socials.map(s=>{const a=analyses[s.id],last=s.socialAccountMetricSnapshots?.[0];return <div key={s.id} className="rounded-xl bg-slate-50 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><a href={s.profileUrl} target="_blank" rel="noreferrer" className="font-medium text-blue-700 underline">@{s.handle.replace(/^@/,"")}</a><button disabled={!!busy||!connected} onClick={()=>void analyse(s.id)} className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{busy===s.id?"Fetching…":"Fetch public metrics"}</button></div>{a?<div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4"><p>Followers<br/><b>{a.followers?.toLocaleString("en-IN")??"—"}</b></p><p>Following<br/><b>{a.following?.toLocaleString("en-IN")??"—"}</b></p><p>Avg. likes<br/><b>{a.averageLikes?.toLocaleString("en-IN")??"—"}</b></p><p>Avg. comments<br/><b>{a.averageComments?.toLocaleString("en-IN")??"—"}</b></p><p>Engagement<br/><b>{a.engagementRate==null?"—":a.engagementRate+"%"}</b></p></div>:last?<p className="mt-2 text-xs text-slate-600">Last checked {new Date(last.recordedAt).toLocaleString()} · Followers {s.followers??"—"} · Avg likes {last.averageLikes??"—"} · Avg comments {last.averageComments??"—"} · ER {last.engagementRate==null?"—":last.engagementRate+"%"}</p>:<p className="mt-2 text-xs text-slate-500">Not analysed yet.</p>}{a?.posts?.slice(0,5).map(p=><p key={p.id} className="mt-1 text-xs text-slate-600">{p.type??"Media"} · {p.likes??"—"} likes · {p.comments??"—"} comments {p.permalink&&<a className="text-blue-700 underline" href={p.permalink} target="_blank" rel="noreferrer">View</a>}</p>)}{a?.note&&<p className="mt-2 text-xs text-amber-700">{a.note}</p>}</div>})}</div>}
-   {item.status==="PENDING"&&<div className="mt-4 flex gap-2"><button onClick={()=>void decide(item.id,"APPROVED")} className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Approve</button><button onClick={()=>void decide(item.id,"REJECTED")} className="rounded-full border border-red-400 px-4 py-2 text-sm text-red-600">Reject</button></div>}
-  </article>})}
- </div>;
+import { useCallback, useEffect, useState } from "react";
+
+type Social = { id: string; handle: string; profileUrl: string };
+type Item = { id: string; status: string; note: string | null; reviewNote?: string | null; applicant: { name: string; email: string; role: string; creatorProfile?: { displayName: string | null; city: string | null; state: string | null; socialAccounts: Social[] } | null } };
+
+export function VerificationQueue() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [message, setMessage] = useState("");
+  const load = useCallback(async () => {
+    const response = await fetch("/api/verification", { cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok) { setMessage(data.error ?? "Unable to load verification requests."); return; }
+    setItems(data.requests ?? []);
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  async function decide(id: string, decision: "APPROVED" | "REJECTED") {
+    const reviewNote = decision === "REJECTED" ? window.prompt("Reason for rejection (optional):") ?? "" : "";
+    const response = await fetch("/api/verification", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, decision, reviewNote }) });
+    const data = await response.json();
+    setMessage(response.ok ? "Review saved." : data.error ?? "Review failed.");
+    if (response.ok) await load();
+  }
+  return <div className="mt-8 space-y-4">
+    {message && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{message}</p>}
+    {items.length === 0 ? <p className="rounded-xl border border-slate-200 p-5 text-sm text-slate-600">No verification requests.</p> : items.map((item) => {
+      const instagram = item.applicant.creatorProfile?.socialAccounts.find((account) => account.profileUrl.includes("instagram.com"));
+      return <article key={item.id} className="rounded-2xl border border-slate-200 p-5">
+        <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-semibold">{item.applicant.creatorProfile?.displayName || item.applicant.name}</h2><p className="text-sm text-slate-600">{item.applicant.email} · {item.applicant.role}</p><p className="text-xs text-slate-500">{[item.applicant.creatorProfile?.city, item.applicant.creatorProfile?.state].filter(Boolean).join(", ")}</p></div><span className="text-xs text-slate-600">{item.status}</span></div>
+        {item.note && <p className="mt-3 text-sm">{item.note}</p>}
+        {item.applicant.role === "CREATOR" && <p className="mt-3 text-sm text-slate-600">Instagram username: {instagram ? <a href={instagram.profileUrl} target="_blank" rel="noreferrer" className="text-blue-700 underline">@{instagram.handle.replace(/^@/, "")}</a> : "Not provided"}</p>}
+        {item.reviewNote && <p className="mt-2 text-xs text-slate-500">Review note: {item.reviewNote}</p>}
+        {item.status === "PENDING" && <div className="mt-4 flex gap-2"><button onClick={() => void decide(item.id, "APPROVED")} className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Approve</button><button onClick={() => void decide(item.id, "REJECTED")} className="rounded-full border border-red-400 px-4 py-2 text-sm text-red-600">Reject</button></div>}
+      </article>;
+    })}
+  </div>;
 }

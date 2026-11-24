@@ -156,12 +156,9 @@ model SocialAccount {
   handle                       String
   profileUrl                   String
   followers                    Int?
-  following                    Int?
   createdAt                    DateTime                      @default(now())
   updatedAt                    DateTime                      @updatedAt
   creatorProfile               CreatorProfile                @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
-  socialAccountMetricSnapshots SocialAccountMetricSnapshot[]
-  profilePictureUrl     String?
   source                String   @default("MANUAL")
   @@unique([creatorProfileId, platform])
   @@index([creatorProfileId])
@@ -182,37 +179,6 @@ model VerificationRequest {
   reviewer     User?     @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   @@index([status, createdAt])
   @@index([userId, createdAt])
-}
-
-model SocialAccountMetricSnapshot {
-  id              String @id @default(cuid())
-  socialAccountId String
-  followers       Int?
-  followingCount  Int?
-  postsAnalyzed   Int      @default(0)
-  recentPosts     Json?
-  averageLikes    Int?
-  averageComments Int?
-  averageViews    Int?
-  engagementRate  Float?
-  source     String   @default("SELF_REPORTED")
-  recordedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
-  audienceInsights AudienceInsight[]
-  @@index([socialAccountId, recordedAt])
-}
-
-model AudienceInsight {
-  id               String @id @default(cuid())
-  metricSnapshotId String
-  category   String
-  label      String
-  percentage Float
-  createdAt DateTime @default(now())
-  metricSnapshot SocialAccountMetricSnapshot @relation(fields: [metricSnapshotId], references: [id], onDelete: Cascade)
-  @@unique([metricSnapshotId, category, label])
-  @@index([metricSnapshotId, category])
 }
 
 model Campaign {
