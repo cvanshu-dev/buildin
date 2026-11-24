@@ -22,6 +22,7 @@ export function CollaborationTrustPanel({ collaborationId, collaborationStatus, 
   const [description, setDescription] = useState("");
   const [evidenceLabel, setEvidenceLabel] = useState("");
   const [evidenceContent, setEvidenceContent] = useState("");
+  const [evidenceDrafts, setEvidenceDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -75,7 +76,7 @@ export function CollaborationTrustPanel({ collaborationId, collaborationStatus, 
   }
 
   return <section className="mt-8 space-y-5 rounded-2xl border border-white/10 bg-[#111719] p-5 text-white sm:p-6">
-    <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Trust & accountability</p><h2 className="mt-1 text-xl font-semibold">Reviews and disputes</h2><p className="mt-1 text-sm text-white/55">Reviews are available after completion. Disputes remain visible to both collaboration participants.</p></div>
+    <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Trust & accountability</p><h2 className="mt-1 text-xl font-semibold">Reviews and disputes</h2><p className="mt-1 text-sm text-white/55">{role === "BRAND" ? "Brand workspace" : "Creator workspace"} · Reviews are available after completion. Disputes remain visible to both collaboration participants.</p></div>
     {message && <p role="status" className="rounded-xl border border-cyan-300/20 bg-cyan-300/5 px-3 py-2 text-sm text-cyan-100">{message}</p>}
 
     <div className="space-y-3">
@@ -100,6 +101,7 @@ export function CollaborationTrustPanel({ collaborationId, collaborationStatus, 
         <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{dispute.title}</span><span className="rounded-full bg-white/10 px-2.5 py-1 text-xs">{pretty(dispute.status)}</span></div>
         <p className="mt-1 text-xs text-cyan-200/70">{pretty(dispute.category)} · opened by {dispute.openedBy.name}</p><p className="mt-3 whitespace-pre-wrap text-sm text-white/65">{dispute.description}</p>
         {dispute.evidence.length > 0 && <div className="mt-3 space-y-2 border-t border-white/10 pt-3"><p className="text-xs font-semibold text-white/50">Evidence</p>{dispute.evidence.map(item => <div key={item.id} className="rounded-lg bg-white/[0.04] p-3 text-sm"><p className="font-medium">{item.label}</p>{item.content && <p className="mt-1 whitespace-pre-wrap text-white/60">{item.content}</p>}{item.url && <a href={item.url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-cyan-200 underline">Open evidence link</a>}<p className="mt-1 text-xs text-white/35">Added by {item.submittedBy.name}</p></div>)}</div>}
+        {["OPEN", "UNDER_REVIEW"].includes(dispute.status) && <div className="mt-3 flex flex-col gap-2 sm:flex-row"><input className={field} value={evidenceDrafts[dispute.id] || ""} onChange={e => setEvidenceDrafts(old => ({...old, [dispute.id]: e.target.value}))} placeholder="Add a supporting note"/><button type="button" disabled={busy || !(evidenceDrafts[dispute.id] || "").trim()} className={button} onClick={() => void send(`/api/collaborations/${collaborationId}/disputes/${dispute.id}/evidence`, {kind:"NOTE", label:"Additional evidence", content:evidenceDrafts[dispute.id]}, "Evidence added to dispute.")}>Add evidence</button></div>}
         {dispute.resolutionNote && <p className="mt-3 rounded-lg bg-emerald-300/5 p-3 text-sm text-emerald-100">Admin decision: {dispute.resolutionNote}</p>}
       </article>)}</div>
       {["ACTIVE", "COMPLETED"].includes(collaborationStatus) && <form onSubmit={submitDispute} className="mt-4 space-y-3 rounded-xl border border-white/10 p-4">
