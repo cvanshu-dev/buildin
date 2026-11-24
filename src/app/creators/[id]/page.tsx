@@ -59,6 +59,7 @@ export default async function PublicCreatorProfilePage({
         <h1 className="mt-4 text-4xl font-semibold">
           {profile.displayName || "Creator"}
         </h1>
+        <div className="mt-3 flex items-center gap-2 text-sm">{ratingSummary._avg.rating ? <><span className="text-amber-500">★</span><strong>{ratingSummary._avg.rating.toFixed(1)} / 5</strong><span className="text-slate-500">· {ratingSummary._count._all} completed-collaboration reviews</span></> : <span className="text-slate-500">No collaboration reviews yet</span>}</div>
         {(profile.city || profile.state) && (
           <p className="mt-2 text-slate-600">
             {[profile.city, profile.state].filter(Boolean).join(", ")}
@@ -125,7 +126,11 @@ export default async function PublicCreatorProfilePage({
             </div>
           </section>
         )}
-        <section className="mt-12">\n          <h2 className="text-xl font-semibold">Reviews from brands</h2>\n          <div className="mt-4 space-y-3">{reviews.length ? reviews.map(review => <article key={review.id} className="rounded-2xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{review.reviewer.name}</p><p className="text-amber-500">{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5-review.rating)}</span></p></div>{review.title && <h3 className="mt-2 font-semibold">{review.title}</h3>}<p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{review.comment}</p><p className="mt-3 text-xs text-slate-500">Campaign: {review.collaboration.campaign.title} · {new Date(review.createdAt).toLocaleDateString("en-IN")}</p></article>) : <p className="rounded-xl border border-dashed border-slate-200 p-5 text-sm text-slate-500">Completed collaboration reviews will appear here.</p>}</div>\n        </section>\n        {profile.socialAccounts.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold">Reviews from brands</h2>
+          <div className="mt-4 space-y-3">{reviews.length ? reviews.map(review => <article key={review.id} className="rounded-2xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{review.reviewer.name}</p><p className="text-amber-500">{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5-review.rating)}</span></p></div>{review.title && <h3 className="mt-2 font-semibold">{review.title}</h3>}<p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{review.comment}</p><p className="mt-3 text-xs text-slate-500">Campaign: {review.collaboration.campaign.title} · {new Date(review.createdAt).toLocaleDateString("en-IN")}</p></article>) : <p className="rounded-xl border border-dashed border-slate-200 p-5 text-sm text-slate-500">Completed collaboration reviews will appear here.</p>}</div>
+        </section>
+        {profile.socialAccounts.length > 0 && (
           <section className="mt-12">
             <h2 className="text-xl font-semibold">Social accounts</h2>
             <div className="mt-4 flex flex-wrap gap-3">
