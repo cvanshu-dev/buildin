@@ -81,6 +81,8 @@ export function ProfileWorkspace({
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [portfolioMediaType, setPortfolioMediaType] = useState<"IMAGE" | "VIDEO">("IMAGE");
+  const [portfolioPublicId, setPortfolioPublicId] = useState("");
+  const [portfolioResourceType, setPortfolioResourceType] = useState<"image" | "video" | "raw" | "">("");
   const [platform, setPlatform] = useState("INSTAGRAM");
   const [handle, setHandle] = useState("");
 
@@ -244,6 +246,7 @@ export function ProfileWorkspace({
           title,
           mediaUrl: url,
           mediaType: portfolioMediaType,
+          ...(portfolioPublicId && portfolioResourceType ? { publicId: portfolioPublicId, resourceType: portfolioResourceType } : {}),
         }),
       });
 
@@ -260,6 +263,8 @@ export function ProfileWorkspace({
       setTitle("");
       setUrl("");
       setPortfolioMediaType("IMAGE");
+      setPortfolioPublicId("");
+      setPortfolioResourceType("");
       setMessage("Portfolio item added.");
 
       await load();
@@ -275,7 +280,7 @@ export function ProfileWorkspace({
     }
   }
 
-  // Add social account.
+  async function removePortfolio(id: string) {\n    setBusy(true);\n    try { const response = await fetch(`/api/portfolio?id=${encodeURIComponent(id)}`, { method: "DELETE" }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to delete portfolio item."); setMessage("Portfolio item removed."); await load(); } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to delete portfolio item."); } finally { setBusy(false); }\n  }\n\n  // Add social account.
   async function addSocial() {
     setBusy(true);
     setMessage("");
@@ -460,7 +465,7 @@ export function ProfileWorkspace({
               />
 
               <input className="rounded-xl bg-slate-50 p-3" placeholder="Public media URL (optional if uploaded)" value={url} onChange={(event) => setUrl(event.target.value)} />
-              <div className="md:col-span-2"><MediaUploader context="portfolio" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" maxSizeMb={100} onUpload={(asset) => { setUrl(asset.secure_url); setPortfolioMediaType(asset.resource_type === "video" ? "VIDEO" : "IMAGE"); }} /></div>
+              <div className="md:col-span-2"><MediaUploader context="portfolio" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" maxSizeMb={100} onUpload={(asset) => { setUrl(asset.secure_url); setPortfolioMediaType(asset.resource_type === "video" ? "VIDEO" : "IMAGE"); setPortfolioPublicId(asset.public_id); setPortfolioResourceType(asset.resource_type as "image" | "video" | "raw"); }} /></div>
             </div>
 
             <button
