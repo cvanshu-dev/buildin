@@ -29,7 +29,22 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       },
       agreement: {
         include: {
-          versions: { orderBy: { version: "desc" } },
+          versions: {
+            orderBy: { version: "desc" },
+            select: {
+              id: true,
+              version: true,
+              title: true,
+              terms: true,
+              status: true,
+              createdAt: true,
+              acceptedAt: true,
+              brandAcceptedAt: true,
+              brandAcceptedName: true,
+              creatorAcceptedAt: true,
+              creatorAcceptedName: true,
+            },
+          },
         },
       },
     },
