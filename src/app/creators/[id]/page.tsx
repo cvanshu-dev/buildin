@@ -126,7 +126,7 @@ export default async function PublicCreatorProfilePage({
           <section className="mt-8 space-y-4">
             <h2 className="text-xl font-semibold">Audience & engagement</h2>
             {profile.socialAccounts.filter((account) => account.platform === "INSTAGRAM").map((account) => (
-              <InstagramAnalytics key={account.id} accountId={account.id} initial={account.socialAccountMetricSnapshots[0] ?? null} compact />
+              <InstagramAnalytics key={account.id} accountId={account.id} initial={account.socialAccountMetricSnapshots[0] ? { ...account.socialAccountMetricSnapshots[0], recordedAt: account.socialAccountMetricSnapshots[0].recordedAt.toISOString() } : null} compact />
             ))}
           </section>
         )}
