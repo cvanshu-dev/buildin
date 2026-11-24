@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, Bell, BriefcaseBusiness, FileText, Inbox } from "lucide-react";
 type Data={
  applications:{id:string;pitch:string;proposedRate:number|null;status:string;createdAt:string;campaign:{id:string;title:string;status:string;applicationDeadline:string|null;brand:{name:string}}}[];
@@ -13,8 +13,8 @@ const money=(n:number|null)=>n==null?"Not agreed":new Intl.NumberFormat("en-IN",
 const pill=(s:string)=>["ACCEPTED","APPROVED","ACTIVE","COMPLETED"].includes(s)?"bg-emerald-50 text-emerald-700":["REJECTED","CANCELLED"].includes(s)?"bg-red-50 text-red-700":s==="CHANGES_REQUESTED"?"bg-amber-50 text-amber-800":"bg-blue-50 text-blue-700";
 export function CreatorSectionWorkspace({section}:{section:Section}){
  const [data,setData]=useState<Data|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[filter,setFilter]=useState("ALL"),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
- async function load(){setLoading(true);setError("");try{const r=await fetch("/api/creator/overview",{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to load workspace data.");setData(d);}catch(e){setError(e instanceof Error?e.message:"Unable to load data.");}finally{setLoading(false);}}
- useEffect(()=>{void load();},[]);
+ const load=useCallback(async()=>{setLoading(true);setError("");try{const requests=[fetch("/api/creator/overview",{cache:"no-store"})];if(section==="notifications")requests.push(fetch("/api/notifications?limit=50",{cache:"no-store"}));const responses=await Promise.all(requests);const d=await responses[0].json();if(!responses[0].ok)throw new Error(d.error||"Unable to load workspace data.");if(section==="notifications"){const inbox=await responses[1].json();if(!responses[1].ok)throw new Error(inbox.error||"Unable to load notifications.");d.notifications=inbox.notifications||[];}setData(d);}catch(e){setError(e instanceof Error?e.message:"Unable to load data.");}finally{setLoading(false);}},[section]);
+ useEffect(()=>{void load();},[load]);
  async function markAll(){setBusy(true);setNotice("");try{const r=await fetch("/api/notifications",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({markAllRead:true})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to mark notifications read.");setNotice("All notifications marked as read.");await load();}catch(e){setError(e instanceof Error?e.message:"Unable to update notifications.");}finally{setBusy(false);}}
  async function markOne(id:string){try{const r=await fetch("/api/notifications",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({notificationId:id})});if(!r.ok)throw new Error("Unable to update notification.");await load();}catch(e){setError(e instanceof Error?e.message:"Unable to update notification.");}}
  const title=section==="applications"?"My applications":section==="collaborations"?"My collaborations":"Notifications";
