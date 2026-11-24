@@ -49,8 +49,10 @@ export async function refreshInstagramAnalytics(socialAccountId: string) {
   const views = posts.map(p => numberOrNull(p.videoPlayCount, p.videoViewCount, p.views, p.playCount)).filter((n): n is number => n !== null);
   const average = (values: number[]) => values.length ? Math.round(values.reduce((a,b)=>a+b,0)/values.length) : null;
   const avgLikes = average(likes), avgComments = average(comments), avgViews = average(views);
-  const engagementRate = followers && followers > 0 && avgLikes !== null && avgComments !== null
-    ? Number((((avgLikes + avgComments) / followers) * 100).toFixed(2)) : null;
+  const engagementTotal = (avgLikes ?? 0) + (avgComments ?? 0);
+  const hasEngagementData = avgLikes !== null || avgComments !== null;
+  const engagementRate = followers && followers > 0 && hasEngagementData
+    ? Number(((engagementTotal / followers) * 100).toFixed(2)) : null;
   const recentPosts = posts.map(p => ({
     url: str(p.url, p.postUrl, p.inputUrl),
     type: str(p.type, p.productType),
@@ -63,7 +65,7 @@ export async function refreshInstagramAnalytics(socialAccountId: string) {
   const snapshot = await prisma.socialAccountMetricSnapshot.create({
     data: {
       socialAccountId: account.id,
-      followers: followers ?? account.followers ?? 0,
+      followers: followers ?? account.followers,
       followingCount: following,
       averageLikes: avgLikes,
       averageComments: avgComments,
