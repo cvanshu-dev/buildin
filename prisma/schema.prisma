@@ -255,6 +255,8 @@ model CollaborationMessage {
   collaborationId String
   senderId        String
   body            String
+  readAt          DateTime?
+  editedAt        DateTime?
   createdAt       DateTime @default(now())
   collaboration   Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
   sender          User @relation(fields: [senderId], references: [id], onDelete: Cascade)
