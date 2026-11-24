@@ -13,6 +13,8 @@ const updateSchema = z.object({
   deliverableId: z.string().min(1),
   action: z.enum(["SUBMIT", "APPROVE", "REQUEST_CHANGES"]),
   assetUrl: z.string().url().max(2048).optional(),
+  assets: z.array(z.object({ url: z.string().url().max(2048), publicId: z.string().min(1).max(240), resourceType: z.enum(["image", "video", "raw"]), bytes: z.number().int().positive().max(100 * 1024 * 1024), fileName: z.string().trim().min(1).max(180) })).max(10).optional(),
+  submissionNote: z.string().trim().max(1000).optional(),
   feedback: z.string().trim().max(1000).optional(),
 });
 
@@ -63,11 +65,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const item = await prisma.deliverable.findFirst({ where: { id: parsed.data.deliverableId, collaborationId: id } });
   if (!item) return NextResponse.json({ error: "Deliverable not found." }, { status: 404 });
   const isCreator = collab.creatorProfile.userId === user.id;
-  const { action, assetUrl, feedback } = parsed.data;
+  const { action, assetUrl, assets, submissionNote, feedback } = parsed.data;
 
   if (action === "SUBMIT") {
     if (!isCreator) return NextResponse.json({ error: "Only the creator can submit work." }, { status: 403 });
-    if (!assetUrl) return NextResponse.json({ error: "A deliverable URL is required for submission." }, { status: 400 });
+    if (!assetUrl && !assets?.length) return NextResponse.json({ error: "Upload at least one deliverable file or provide a URL." }, { status: 400 });
+    if (assets?.some((asset) => {
+      const url = new URL(asset.url);
+      return url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || !asset.publicId.startsWith(`buildin/collaborations/${id}/deliverables/`);
+    })) return NextResponse.json({ error: "All uploaded files must belong to this collaboration." }, { status: 400 });
     if (item.status !== "PENDING" && item.status !== "CHANGES_REQUESTED") return NextResponse.json({ error: "Only pending deliverables or requested revisions can be submitted." }, { status: 409 });
   } else {
     if (isCreator) return NextResponse.json({ error: "Only the brand can review work." }, { status: 403 });
@@ -79,12 +85,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     const updated = await prisma.$transaction(async (tx) => {
       if (action === "SUBMIT") {
         const version = item.submissionVersion + 1;
+        const submittedUrl = assets?.[0]?.url ?? assetUrl!;
         const result = await tx.deliverable.update({
           where: { id: item.id },
-          data: { status: "SUBMITTED", assetUrl, submittedAt: new Date(), feedback: null, reviewedAt: null, submissionVersion: version },
+          data: { status: "SUBMITTED", assetUrl: submittedUrl, submittedAt: new Date(), feedback: null, reviewedAt: null, submissionVersion: version },
         });
         await tx.deliverableSubmission.create({
-          data: { deliverableId: item.id, version, assetUrl: assetUrl!, note: null, submittedById: user.id },
+          data: { deliverableId: item.id, version, assetUrl: submittedUrl, note: submissionNote ?? null, submittedById: user.id, attachments: assets?.length ? { create: assets.map((asset) => ({ fileName: asset.fileName, url: asset.url, publicId: asset.publicId, resourceType: asset.resourceType, bytes: asset.bytes })) } : undefined },
         });
         for (const member of collab.campaign.brand.members) {
           await tx.notification.create({ data: { userId: member.userId, type: "DELIVERABLE_SUBMITTED", title: "Creator submitted work", body: `${user.name} submitted "${item.title}" for ${collab.campaign.title}.`, href: "/dashboard/brand" } });
