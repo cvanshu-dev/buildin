@@ -317,6 +317,16 @@ model CollaborationAgreementVersion {
   status      String   @default("DRAFT")
   createdById String
   acceptedAt  DateTime?
+  brandAcceptedAt DateTime?
+  brandAcceptedById String?
+  brandAcceptedName String?
+  brandAcceptedIp String?
+  brandAcceptedUserAgent String?
+  creatorAcceptedAt DateTime?
+  creatorAcceptedById String?
+  creatorAcceptedName String?
+  creatorAcceptedIp String?
+  creatorAcceptedUserAgent String?
   createdAt   DateTime @default(now())
   agreement   CollaborationAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
   @@unique([agreementId, version])

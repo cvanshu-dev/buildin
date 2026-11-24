@@ -27,7 +27,26 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           },
         },
       },
-      agreement: true,
+      agreement: {
+        include: {
+          versions: {
+            orderBy: { version: "desc" },
+            select: {
+              id: true,
+              version: true,
+              title: true,
+              terms: true,
+              status: true,
+              createdAt: true,
+              acceptedAt: true,
+              brandAcceptedAt: true,
+              brandAcceptedName: true,
+              creatorAcceptedAt: true,
+              creatorAcceptedName: true,
+            },
+          },
+        },
+      },
     },
   });
   if (!collaboration) return NextResponse.json({ error: "Collaboration not found." }, { status: 404 });
