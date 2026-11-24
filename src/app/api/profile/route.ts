@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
+import { findOwnedVerifiedMedia, isCloudinarySecureUrl } from "@/lib/media-assets";
 
 const text = (max: number) => z.string().trim().max(max).optional().nullable();
 
@@ -155,19 +156,46 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (parsed.data.logoPublicId && (!parsed.data.logoUrl || !parsed.data.logoPublicId.startsWith(`buildin/brands/${membership.brandId}/logo/`))) return NextResponse.json({ error: "Invalid brand logo media reference." }, { status: 400 });
     const { logoPublicId, ...brandData } = parsed.data;
-    const profile = await prisma.brand.update({
-      where: { id: membership.brandId },
-      data: {
-        ...brandData,
-        ...(brandData.logoUrl !== undefined ? { logoUrl: brandData.logoUrl || null } : {}),
-        website: brandData.website || null,
-        contactEmail: brandData.contactEmail || null,
-      },
-    });
-    if (logoPublicId) await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: logoPublicId }, data: { linkedAt: new Date() } });
+    if (logoPublicId || (brandData.logoUrl && isCloudinarySecureUrl(brandData.logoUrl))) {
+      if (!logoPublicId || !brandData.logoUrl || !isCloudinarySecureUrl(brandData.logoUrl)) {
+        return NextResponse.json({ error: "Select a verified brand logo upload." }, { status: 400 });
+      }
+      const asset = await findOwnedVerifiedMedia({
+        ownerUserId: user.id,
+        publicId: logoPublicId,
+        context: "brand-logo",
+        expectedPrefix: `buildin/brands/${membership.brandId}/logo/`,
+      });
+      if (!asset || asset.resourceType !== "image") {
+        return NextResponse.json({ error: "This logo upload is not verified or does not belong to your brand." }, { status: 403 });
+      }
+    }
 
+    const profile = await prisma.$transaction(async (tx) => {
+      const updated = await tx.brand.update({
+        where: { id: membership.brandId },
+        data: {
+          ...brandData,
+          ...(brandData.logoUrl !== undefined ? { logoUrl: brandData.logoUrl || null } : {}),
+          website: brandData.website || null,
+          contactEmail: brandData.contactEmail || null,
+        },
+      });
+      if (logoPublicId) {
+        const linked = await tx.mediaAsset.updateMany({
+          where: { ownerUserId: user.id, publicId: logoPublicId, linkedAt: null },
+          data: { linkedAt: new Date() },
+        });
+        if (linked.count !== 1) throw new Error("MEDIA_LINK_CONFLICT");
+      }
+      return updated;
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.message === "MEDIA_LINK_CONFLICT") return null;
+      throw error;
+    });
+
+    if (!profile) return NextResponse.json({ error: "This logo upload has already been used. Upload it again." }, { status: 409 });
     return NextResponse.json({ ok: true, profile });
   }
 
