@@ -73,9 +73,11 @@ Configure server-only `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDI
 
 Supported upload surfaces: creator avatars and portfolio media, brand logos, campaign covers, campaign brief attachments, and collaboration deliverables. Campaign briefs support up to 20 attachments, 25 MB each. Deliverable submissions support up to 10 attachments per version, 100 MB each. Avatars, logos, and campaign covers are limited to 8 MB.
 
-### Instagram profile sync
+### Instagram creator analytics
 
-Buildin supports the official Instagram Login OAuth flow for eligible professional Instagram accounts. Create a Meta Developer app, enable Instagram Login, configure the exact redirect URI `/api/integrations/instagram/callback`, and request the `instagram_business_basic` permission. Set `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`, and a unique 32-byte base64 `INSTAGRAM_TOKEN_ENCRYPTION_KEY` (generate one with `openssl rand -base64 32`). Access tokens are encrypted with AES-256-GCM before storage. The connected account profile and profile picture are synced into the creator profile; users can manually refresh a still-valid long-lived token or reconnect when expired. Personal/consumer accounts and Meta app review/permissions restrictions are not bypassed.
+Creators submit a public Instagram username in their profile; they do not connect Instagram, share passwords, or authorize Buildin. An administrator connects Buildin's own eligible Instagram professional account once. During manual creator verification, staff can use Meta Business Discovery to retrieve available follower/following counts and recent media likes, comments, and Reel view counts. Meta only supports eligible public professional accounts; personal/consumer accounts, hidden metrics, unavailable media fields, and API permission/review restrictions are not bypassed. Reel view counts are returned only when Meta exposes `view_count`.
+
+Set `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_CONFIG_ID`, `INSTAGRAM_REDIRECT_URI`, and `INSTAGRAM_TOKEN_ENCRYPTION_KEY` (generate the encryption key with `openssl rand -base64 32`). Add the exact callback URL to the Meta app. Only Admin/Super Admin can connect the platform account.
 
 ### Database migration
 
@@ -85,7 +87,7 @@ Apply committed migrations with `npx prisma migrate deploy`, then run `npx prism
 
 The media destroy endpoint only accepts public IDs in the authenticated creator's or brand owner's Buildin folders (or that creator's own collaboration folders). Verified uploads are tracked in the `MediaAsset` table. Assets are marked linked when saved to a profile, portfolio, campaign brief, or deliverable submission. Campaign brief attachment and portfolio item removal delete both the Cloudinary asset and its database record.
 
-Configure `CRON_SECRET` and schedule authenticated GET requests to `/api/media/cleanup` and `/api/integrations/instagram/refresh-all` at least daily (for example, with Hostinger Cron Jobs). Media cleanup removes verified uploads that remain unlinked for more than 24 hours, processing up to 100 assets per run. Instagram refresh-all refreshes connected long-lived tokens expiring within 15 days and re-syncs their profile metadata. Keep both endpoints private and do not expose the cron secret in client code.
+Configure `CRON_SECRET` and schedule authenticated GET requests to `/api/media/cleanup` at least daily (for example, with Hostinger Cron Jobs). Media cleanup removes verified uploads that remain unlinked for more than 24 hours, processing up to 100 assets per run.  Keep both endpoints private and do not expose the cron secret in client code.
 
 ### Deployment checklist
 
@@ -93,5 +95,5 @@ Configure `CRON_SECRET` and schedule authenticated GET requests to `/api/media/c
 - Add the Instagram callback URL to the Meta app exactly as configured in `INSTAGRAM_REDIRECT_URI`.
 - Apply migrations and regenerate Prisma Client.
 - Test image, video, PDF/document uploads and deletion against a real Cloudinary account.
-- Test OAuth using a Meta app with the required permissions and an eligible professional Instagram account.
+- Test the platform Instagram OAuth connection using a Meta app with Business Discovery access and an eligible professional Instagram account. Then test Business Discovery against eligible public creator accounts.
 - Run `npm run typecheck`, `npm run lint`, and `npm run build`, then exercise the complete flows in staging.

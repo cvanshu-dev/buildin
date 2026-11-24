@@ -202,6 +202,7 @@ model SocialAccountMetricSnapshot {
   followers       Int
   averageLikes    Int?
   averageComments Int?
+  averageViews    Int?
   engagementRate  Float?
   source     String   @default("SELF_REPORTED")
   recordedAt DateTime @default(now())

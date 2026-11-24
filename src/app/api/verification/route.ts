@@ -29,15 +29,6 @@ export async function POST(request: Request) {
   if (!["BRAND", "CREATOR"].includes(user.role)) return NextResponse.json({ error: "Marketplace account required." }, { status: 403 });
   const parsed = submitSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
-  if (user.role === "CREATOR") {
-    const profile = await prisma.creatorProfile.findUnique({
-      where: { userId: user.id },
-      select: { socialAccounts: { where: { platform: "INSTAGRAM" }, select: { id: true }, take: 1 } },
-    });
-    if (!profile?.socialAccounts.length) {
-      return NextResponse.json({ error: "Add your public Instagram account to your profile before requesting verification." }, { status: 400 });
-    }
-  }
   const existing = await prisma.verificationRequest.findFirst({ where: { userId: user.id, status: "PENDING" } });
   if (existing) return NextResponse.json({ error: "You already have a pending verification request." }, { status: 409 });
   const item = await prisma.verificationRequest.create({ data: { userId: user.id, note: parsed.data.note || null } });
