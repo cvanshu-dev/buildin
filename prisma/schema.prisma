@@ -236,7 +236,7 @@ model Collaboration {
   campaignId    String
   applicationId String   @unique
   creatorProfileId String
-  status        String   @default("ACTIVE")
+  status        String   @default("PENDING_START")
   agreedAmount  Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -245,6 +245,7 @@ model Collaboration {
   creatorProfile CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
   messages      CollaborationMessage[]
   deliverables  Deliverable[]
+  milestones    CollaborationMilestone[]
   agreement     CollaborationAgreement?
   milestones    CollaborationMilestone[]
   events        CollaborationEvent[]
@@ -468,4 +469,28 @@ model MediaAsset {
   owner        User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   @@index([linkedAt, createdAt])
   @@index([ownerUserId, context])
+}
+
+
+enum CollaborationMilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model CollaborationMilestone {
+  id              String                       @id @default(cuid())
+  collaborationId String
+  title           String                       @db.VarChar(120)
+  description     String?                      @db.VarChar(1000)
+  dueAt           DateTime?
+  status          CollaborationMilestoneStatus @default(PENDING)
+  createdById     String
+  completedById   String?
+  completedAt     DateTime?
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  collaboration   Collaboration                @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  @@index([collaborationId, status])
+  @@index([dueAt, status])
 }
