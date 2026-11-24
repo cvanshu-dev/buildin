@@ -34,8 +34,8 @@ export async function refreshInstagramAnalytics(socialAccountId: string) {
   if (!/^[a-zA-Z0-9._]{1,30}$/.test(username)) throw new Error("Enter a valid Instagram username.");
 
   const [profileRows, postRows] = await Promise.all([
-    runActor(token, actor, { directUrls: [username], resultsType: "details", resultsLimit: 1 }),
-    runActor(token, actor, { directUrls: [username], resultsType: "posts", resultsLimit: 12, addParentData: true }),
+    runActor(token, actor, { directUrls: [`https://www.instagram.com/${username}/`], resultsType: "details", resultsLimit: 1 }),
+    runActor(token, actor, { directUrls: [`https://www.instagram.com/${username}/`], resultsType: "posts", resultsLimit: 12, addParentData: true }),
   ]);
   const profile = profileRows.find(row => str(row.username, row.ownerUsername, row.owner_username)) ?? profileRows[0] ?? {};
   const posts = postRows.filter(row => {
