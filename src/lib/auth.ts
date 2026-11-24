@@ -4,6 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 
 const baseURL = process.env.BETTER_AUTH_URL || "http://localhost:3000";
+const trustedOrigins = [
+  baseURL,
+  ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  "http://localhost:3000",
+].filter((origin, index, origins) => origins.indexOf(origin) === index);
 const secret = process.env.BETTER_AUTH_SECRET;
 if (process.env.NODE_ENV === "production" && !secret) {
   throw new Error("BETTER_AUTH_SECRET must be configured in production.");
@@ -16,7 +24,7 @@ export const auth = betterAuth({
   baseURL,
   secret: secret || "local-development-only-secret-change-before-production-please",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  trustedOrigins: [baseURL],
+  trustedOrigins,
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 10,

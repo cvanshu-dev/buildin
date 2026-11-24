@@ -1,0 +1,1 @@
+ALTER TABLE "SocialAccountMetricSnapshot" ADD COLUMN "averageViews" INTEGER;

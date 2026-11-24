@@ -156,18 +156,17 @@ model SocialAccount {
   handle                       String
   profileUrl                   String
   followers                    Int?
+  following                    Int?
   createdAt                    DateTime                      @default(now())
   updatedAt                    DateTime                      @updatedAt
   creatorProfile               CreatorProfile                @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
   socialAccountMetricSnapshots SocialAccountMetricSnapshot[]
-  instagramUserId       String?  @unique
-  accessTokenEncrypted  String?  @db.Text
-  tokenExpiresAt        DateTime?
   profilePictureUrl     String?
   source                String   @default("MANUAL")
   @@unique([creatorProfileId, platform])
   @@index([creatorProfileId])
 }
+
 
 model VerificationRequest {
   id           String    @id @default(cuid())
@@ -188,9 +187,13 @@ model VerificationRequest {
 model SocialAccountMetricSnapshot {
   id              String @id @default(cuid())
   socialAccountId String
-  followers       Int
+  followers       Int?
+  followingCount  Int?
+  postsAnalyzed   Int      @default(0)
+  recentPosts     Json?
   averageLikes    Int?
   averageComments Int?
+  averageViews    Int?
   engagementRate  Float?
   source     String   @default("SELF_REPORTED")
   recordedAt DateTime @default(now())

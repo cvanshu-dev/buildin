@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { InstagramAnalytics } from "@/components/instagram-analytics";
 
-type Tab = "Overview" | "Users" | "Campaigns" | "Applications" | "Verifications" | "Collaborations" | "Staff" | "Audit";
+type Tab = "Overview" | "Users" | "Campaigns" | "Applications" | "Verifications" | "Creator Analytics" | "Collaborations" | "Staff" | "Audit";
 // API payloads are heterogeneous across the admin tables; keep this boundary explicit.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
@@ -16,7 +17,7 @@ type Overview = {
 const pretty = (s: string) => s.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 const money = (n: number | null | undefined) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n ?? 0);
 const date = (s: string) => new Date(s).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-const tabs: Tab[] = ["Overview", "Users", "Campaigns", "Applications", "Verifications", "Collaborations", "Staff", "Audit"];
+const tabs: Tab[] = ["Overview", "Users", "Campaigns", "Applications", "Verifications", "Creator Analytics", "Collaborations", "Staff", "Audit"];
 const staffRoles = ["ADMIN", "SUPER_ADMIN", "CAMPAIGN_MANAGER", "FINANCE_MANAGER", "BRAND", "CREATOR", "PENDING"];
 
 function Status({ value }: { value: string }) {
@@ -64,7 +65,7 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
       } else {
         const endpoints: Partial<Record<Tab, string>> = {
           Users: "/api/admin/users", Campaigns: "/api/admin/campaigns", Applications: "/api/admin/applications",
-          Verifications: "/api/verification", Collaborations: "/api/admin/collaborations", Staff: "/api/admin/staff", Audit: "/api/admin/audit",
+          Verifications: "/api/verification", "Creator Analytics": "/api/admin/creator-analytics", Collaborations: "/api/admin/collaborations", Staff: "/api/admin/staff", Audit: "/api/admin/audit",
         };
         const params = new URLSearchParams();
         if (q) params.set("q", q);
@@ -74,6 +75,7 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
         const r = await fetch(`${endpoints[tab]}?${params.toString()}`, { cache: "no-store" });
         const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Could not load ${tab.toLowerCase()}`);
         if (tab === "Verifications") { setItems(d.requests ?? []); setTotal((d.requests ?? []).length); setPageSize(Math.max(1, (d.requests ?? []).length)); }
+        else if (tab === "Creator Analytics") { setItems(d.creators ?? []); setTotal((d.creators ?? []).length); setPageSize(Math.max(1, (d.creators ?? []).length)); }
         else if (tab === "Staff") { const rows = [...(d.staff ?? []), ...(d.eligibleUsers ?? [])]; setItems(rows); setTotal(rows.length); setPageSize(Math.max(1, rows.length)); }
         else { setItems(d.items ?? []); setTotal(d.total ?? 0); setPageSize(d.pageSize ?? 20); }
         setManagers(d.managers ?? []);
@@ -99,7 +101,7 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
   const canVerify = ["SUPER_ADMIN", "ADMIN"].includes(role);
   const canAudit = ["SUPER_ADMIN", "ADMIN"].includes(role);
   const visibleTabs = tabs.filter(t => {
-    if (t === "Users") return canUsers;
+    if (t === "Users" || t === "Creator Analytics") return canUsers;
     if (t === "Staff") return role === "SUPER_ADMIN";
     if (t === "Audit") return canAudit;
     if (t === "Verifications") return canVerify;
@@ -148,7 +150,20 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
 
     {tab === "Applications" && <div className="mt-4 space-y-3">{items.map(a=><article key={a.id} className="rounded-2xl border border-slate-200 p-5"><div className="flex flex-wrap justify-between gap-3"><div className="font-medium">{a.creatorProfile?.displayName ?? a.creatorProfile?.user?.name ?? "Unknown creator"}<p className="text-xs text-slate-500">{a.creatorProfile?.user?.email ?? "No email"} · {a.campaign?.title ?? "Unknown campaign"} · {a.campaign?.brand?.name ?? "Unknown brand"}</p><p className="mt-1 text-xs text-slate-500">{a.creatorProfile?.city ?? "Location not set"} · Proposed {money(a.proposedRate)}</p></div><Status value={a.status}/></div><p className="mt-3 whitespace-pre-wrap text-sm text-slate-700">{a.pitch ?? "No pitch provided."}</p><div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">{(a.creatorProfile?.socialAccounts ?? []).map((s:Row)=><span key={s.platform} className="rounded-full border border-slate-200 px-3 py-1">{s.platform} · {(s.followers ?? 0).toLocaleString("en-IN")} followers</span>)}</div>{["SUBMITTED","SHORTLISTED"].includes(a.status)&&<div className="mt-4 flex flex-wrap gap-2"><ActionButton disabled={!!busy} onClick={()=>void mutate("/api/admin/applications",{applicationId:a.id,decision:"SHORTLISTED"},"Creator shortlisted.")}>Shortlist</ActionButton><ActionButton disabled={!!busy} onClick={()=>{if(window.confirm("Accept this creator and open a collaboration?"))void mutate("/api/admin/applications",{applicationId:a.id,decision:"ACCEPTED"},"Creator accepted; collaboration opened.");}}>Accept</ActionButton><ActionButton danger disabled={!!busy} onClick={()=>{if(window.confirm("Reject this application?"))void mutate("/api/admin/applications",{applicationId:a.id,decision:"REJECTED"},"Application rejected.");}}>Reject</ActionButton></div>}</article>)}{!items.length&&<Empty>No applications match these filters.</Empty>}</div>}
 
-    {tab === "Verifications" && <div className="mt-4 space-y-3">{items.map(v=><article key={v.id} className="rounded-2xl border border-slate-200 p-5"><div className="flex flex-wrap justify-between gap-3"><div className="font-medium">{v.applicant.name}<p className="text-xs text-slate-500">{v.applicant.email} · {pretty(v.applicant.role)} · {date(v.createdAt)}</p></div><Status value={v.status}/></div>{v.note&&<p className="mt-3 text-sm text-slate-700">{v.note}</p>}{v.reviewNote&&<p className="mt-2 text-xs text-slate-500">Review note: {v.reviewNote}</p>}{v.status==="PENDING"&&<div className="mt-4 flex gap-2"><ActionButton disabled={!!busy} onClick={()=>{const note=window.prompt("Optional review note:");if(note!==null)void mutate("/api/verification",{id:v.id,decision:"APPROVED",reviewNote:note},"Verification approved.");}}>Approve</ActionButton><ActionButton danger disabled={!!busy} onClick={()=>{const note=window.prompt("Reason for rejection:");if(note!==null)void mutate("/api/verification",{id:v.id,decision:"REJECTED",reviewNote:note},"Verification rejected.");}}>Reject</ActionButton></div>}</article>)}{!items.length&&<Empty>No verification requests.</Empty>}</div>}
+    {tab === "Creator Analytics" && <div className="mt-4 space-y-4">
+      <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Publicly collected Instagram metrics only. These are estimates, not private Instagram Insights. Refresh individual accounts to update their snapshots.</p>
+      {items.map((creator) => <article key={creator.id} className="rounded-2xl border border-slate-200 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{creator.displayName || creator.user?.name || "Creator"}</h3><p className="mt-1 text-xs text-slate-500">{creator.user?.email} · {[creator.city,creator.state].filter(Boolean).join(", ") || "Location not set"} · {creator.isPublic ? "Public profile" : "Private profile"}</p></div></div>
+        {creator.socialAccounts?.length ? creator.socialAccounts.map((social:Row) => <div key={social.id} className="mt-4"><a href={social.profileUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-700 underline">@{social.handle.replace(/^@/,"")}</a><div className="mt-2"><InstagramAnalytics accountId={social.id} initial={social.socialAccountMetricSnapshots?.[0] ?? null} canRefresh compact /></div></div>) : <p className="mt-3 text-sm text-slate-500">No Instagram username submitted.</p>}
+      </article>)}
+      {!items.length && <Empty>No creator profiles found.</Empty>}
+    </div>}
+
+    {tab === "Verifications" && <div className="mt-4 space-y-3">
+      <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Creators do not connect Instagram. Public metrics are collected through the configured public-data provider; treat them as estimates, not private Instagram Insights.</p>
+      {items.map(v=><article key={v.id} className="rounded-2xl border border-slate-200 p-5"><div className="flex flex-wrap justify-between gap-3"><div className="font-medium">{v.applicant.creatorProfile?.displayName || v.applicant.name}<p className="text-xs text-slate-500">{v.applicant.email} · {pretty(v.applicant.role)} · {date(v.createdAt)}</p><p className="text-xs text-slate-500">{[v.applicant.creatorProfile?.city,v.applicant.creatorProfile?.state].filter(Boolean).join(", ")}</p></div><Status value={v.status}/></div>{v.note&&<p className="mt-3 text-sm text-slate-700">{v.note}</p>}
+      {v.applicant.role === "CREATOR" && <div className="mt-4 space-y-2"><h4 className="text-sm font-semibold">Instagram reach analysis</h4>{(v.applicant.creatorProfile?.socialAccounts ?? []).length === 0 ? <p className="text-xs text-amber-700">No Instagram username submitted.</p> : (v.applicant.creatorProfile?.socialAccounts ?? []).map((social:Row) => { const snapshot=social.socialAccountMetricSnapshots?.[0]; return <div key={social.id} className="rounded-xl bg-slate-50 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><a href={social.profileUrl} target="_blank" rel="noreferrer" className="font-medium text-blue-700 underline">@{social.handle.replace(/^@/,"")}</a></div><div className="mt-3"><InstagramAnalytics accountId={social.id} initial={snapshot ?? null} canRefresh compact /></div></div>})}</div>}
+      {v.reviewNote&&<p className="mt-2 text-xs text-slate-500">Review note: {v.reviewNote}</p>}{v.status==="PENDING"&&<div className="mt-4 flex gap-2"><ActionButton disabled={!!busy} onClick={()=>{const note=window.prompt("Optional review note:");if(note!==null)void mutate("/api/verification",{id:v.id,decision:"APPROVED",reviewNote:note},"Verification approved.");}}>Approve</ActionButton><ActionButton danger disabled={!!busy} onClick={()=>{const note=window.prompt("Reason for rejection:");if(note!==null)void mutate("/api/verification",{id:v.id,decision:"REJECTED",reviewNote:note},"Verification rejected.");}}>Reject</ActionButton></div>}</article>)}{!items.length&&<Empty>No verification requests.</Empty>}</div>}
 
     {tab === "Collaborations" && <div className="mt-4 space-y-3">{items.map(c=><article key={c.id} className="rounded-2xl border border-slate-200 p-5"><div className="flex flex-wrap justify-between gap-3"><div className="font-medium">{c.campaign.title}<p className="mt-1 text-xs text-slate-500">{c.campaign.brand.name} · {c.creatorProfile.displayName ?? c.creatorProfile.user.name} · {c._count.deliverables} deliverables · {c._count.messages} messages</p><p className="mt-1 text-xs text-slate-500">{c.campaign.managementMode} · Updated {date(c.updatedAt)}</p></div><div className="text-right"><p className="mb-2 text-sm">{money(c.agreedAmount)}</p><Status value={c.status}/></div></div><div className="mt-3 flex flex-wrap gap-2">{c.deliverables.map((d:Row,i:number)=><span key={i} className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">{pretty(d.status)}</span>)}</div></article>)}{!items.length&&<Empty>No collaborations match these filters.</Empty>}</div>}
 

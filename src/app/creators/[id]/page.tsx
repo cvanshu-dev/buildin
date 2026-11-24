@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { InstagramAnalytics } from "@/components/instagram-analytics";
 
 type CreatorPublicPageProps = {
   params: Promise<{ id: string }>;
@@ -38,6 +39,7 @@ export default async function PublicCreatorProfilePage({
           handle: true,
           profileUrl: true,
           followers: true,
+          socialAccountMetricSnapshots: { orderBy: { recordedAt: "desc" }, take: 1 },
         },
       },
     },
@@ -118,6 +120,14 @@ export default async function PublicCreatorProfilePage({
                 </article>
               ))}
             </div>
+          </section>
+        )}
+        {profile.socialAccounts.some((account) => account.platform === "INSTAGRAM") && (
+          <section className="mt-8 space-y-4">
+            <h2 className="text-xl font-semibold">Audience & engagement</h2>
+            {profile.socialAccounts.filter((account) => account.platform === "INSTAGRAM").map((account) => (
+              <InstagramAnalytics key={account.id} accountId={account.id} initial={account.socialAccountMetricSnapshots[0] ? { ...account.socialAccountMetricSnapshots[0], recordedAt: account.socialAccountMetricSnapshots[0].recordedAt.toISOString() } : null} compact />
+            ))}
           </section>
         )}
         {profile.socialAccounts.length > 0 && (
