@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, phase-1-complete]
+    branches: [main, phase-1-complete, phase-9-campaign-lifecycle]
   pull_request:
     branches: [main]
 
