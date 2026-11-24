@@ -18,7 +18,6 @@ type SocialAccount = {
   profileUrl?: string;
   followers?: number | null;
   source?: string;
-  profilePictureUrl?: string | null;
 };
 
 type VerificationItem = {
@@ -540,7 +539,6 @@ export function ProfileWorkspace({
               {(profile.socialAccounts ?? []).map((account) => (
                 <li key={account.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 text-sm">
                   <div className="flex min-w-0 items-center gap-3">
-                    {account.platform === "INSTAGRAM" && account.profilePictureUrl && <img src={account.profilePictureUrl} alt="" className="h-9 w-9 rounded-full object-cover" />}
                     <div className="min-w-0"><p className="font-medium">{account.platform} · {account.handle}</p><p className="text-xs text-slate-500">{account.source === "PUBLIC_DATA_PROVIDER" ? "Public data provider" : "Manually added"}{account.followers != null ? ` · ${account.followers.toLocaleString("en-IN")} followers` : ""}</p></div>
                   </div>
                   {account.profileUrl && <a href={account.profileUrl} target="_blank" rel="noreferrer" className="shrink-0 text-blue-700 underline">Open</a>}
