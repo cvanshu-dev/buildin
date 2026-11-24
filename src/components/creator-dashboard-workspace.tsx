@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowRight, Bell, BriefcaseBusiness, CheckCircle2, CircleUserRound, Compass, FileText, Sparkles } from "lucide-react";
+import { ArrowRight, Bell, BriefcaseBusiness, CircleUserRound, Compass, FileText, Sparkles } from "lucide-react";
 
 type Overview = {
   profile: { id:string; displayName:string|null; bio:string|null; city:string|null; state:string|null; isPublic:boolean; categories:string[]; specialties:string[]; portfolioItems:{id:string}[]; socialAccounts:{id:string}[] };
