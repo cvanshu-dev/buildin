@@ -1,0 +1,13 @@
+"use client";
+import { useRef,useState } from "react";
+type UploadContext="avatar"|"brand-logo"|"portfolio"|"campaign-cover"|"deliverable";
+type Asset={secure_url:string;public_id:string;resource_type:string;bytes:number;format:string};
+export function MediaUploader({context,collaborationId,accept,maxSizeMb,onUpload}:{context:UploadContext;collaborationId?:string;accept:string;maxSizeMb:number;onUpload:(asset:Asset)=>void|Promise<void>}){
+ const inputRef=useRef<HTMLInputElement>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [done,setDone]=useState("");
+ async function upload(file?:File){if(!file)return;setError("");setDone("");if(file.size>maxSizeMb*1024*1024){setError(`File exceeds the ${maxSizeMb} MB limit.`);return;}if(!accept.split(",").includes(file.type)){setError("This file type is not allowed.");return;}setBusy(true);try{
+ const sr=await fetch("/api/media/sign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({context,collaborationId})});const signed=await sr.json();if(!sr.ok)throw new Error(signed.error??"Unable to authorize upload.");
+ const body=new FormData();body.append("file",file);body.append("api_key",signed.apiKey);body.append("timestamp",String(signed.timestamp));body.append("folder",signed.folder);body.append("public_id",signed.publicId);body.append("allowed_formats",signed.allowedFormats);body.append("signature",signed.signature);
+ const r=await fetch(`https://api.cloudinary.com/v1_1/${signed.cloudName}/auto/upload`,{method:"POST",body});const asset=await r.json();if(!r.ok)throw new Error(asset.error?.message??"Cloudinary upload failed.");await onUpload({secure_url:asset.secure_url,public_id:asset.public_id,resource_type:asset.resource_type,bytes:asset.bytes,format:asset.format});setDone("Upload complete.");if(inputRef.current)inputRef.current.value="";
+ }catch(e){setError(e instanceof Error?e.message:"Upload failed.");}finally{setBusy(false);}}
+ return <div className="space-y-2"><input ref={inputRef} type="file" accept={accept} disabled={busy} onChange={e=>void upload(e.target.files?.[0])} className="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:font-semibold file:text-white disabled:opacity-50"/><p className="text-xs text-slate-500">Maximum file size: {maxSizeMb} MB. Files upload directly to Cloudinary.</p>{busy&&<p className="text-xs text-blue-700">Uploading…</p>}{error&&<p role="alert" className="text-xs text-red-600">{error}</p>}{done&&<p role="status" className="text-xs text-green-700">{done}</p>}</div>;
+}
