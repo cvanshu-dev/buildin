@@ -3,7 +3,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { MediaUploader } from "@/components/media-uploader";
-import { InstagramAnalytics } from "@/components/instagram-analytics";
 
 type PortfolioItem = {
   id: string;
@@ -20,7 +19,6 @@ type SocialAccount = {
   followers?: number | null;
   source?: string;
   profilePictureUrl?: string | null;
-  socialAccountMetricSnapshots?: Array<{ id: string; followers: number | null; followingCount: number | null; averageLikes: number | null; averageComments: number | null; averageViews: number | null; engagementRate: number | null; postsAnalyzed: number; source: string; recordedAt: string; recentPosts?: unknown }>;
 };
 
 type VerificationItem = {
@@ -392,7 +390,7 @@ export function ProfileWorkspace({
     <div className="mt-8 space-y-6">
       <section className={panel}>
         <h2 className="mb-2 text-lg font-semibold">{type === "CREATOR" ? "Profile picture" : "Brand logo"}</h2>
-        <p className="mb-4 text-sm text-slate-600">Upload a profile picture manually. Add your public Instagram username below; Buildin’s team analyses available public metrics during review.</p>
+        <p className="mb-4 text-sm text-slate-600">Upload a profile picture manually. Add your public social profile usernames so brands can visit your profiles.</p>
         <div className="flex flex-wrap items-center gap-4">
           {(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ? <img src={(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ?? ""} alt="Profile" className="h-20 w-20 rounded-full border border-slate-200 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-500">{(profile.displayName ?? profile.name ?? "B").slice(0,1).toUpperCase()}</div>}
           <MediaUploader context={type === "CREATOR" ? "avatar" : "brand-logo"} accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={async (asset) => {
@@ -543,15 +541,13 @@ export function ProfileWorkspace({
                 <li key={account.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 text-sm">
                   <div className="flex min-w-0 items-center gap-3">
                     {account.platform === "INSTAGRAM" && account.profilePictureUrl && <img src={account.profilePictureUrl} alt="" className="h-9 w-9 rounded-full object-cover" />}
-                    <div className="min-w-0"><p className="font-medium">{account.platform} · {account.handle}</p><p className="text-xs text-slate-500">{account.source === "PUBLIC_DATA_PROVIDER" ? "Public data provider" : "Manually added"}{account.followers != null ? ` · ${account.followers.toLocaleString("en-IN")} followers` : ""}</p></div>
+                    <div className="min-w-0"><p className="font-medium">{account.platform} · {account.handle}</p><p className="text-xs text-slate-500">"Manually added"{account.followers != null ? ` · ${account.followers.toLocaleString("en-IN")} followers` : ""}</p></div>
                   </div>
                   {account.profileUrl && <a href={account.profileUrl} target="_blank" rel="noreferrer" className="shrink-0 text-blue-700 underline">Open</a>}
                 </li>
               ))}
             </ul>
-            {(profile.socialAccounts ?? []).filter((account) => account.platform === "INSTAGRAM").map((account) => (
               <div key={account.id} className="mt-4">
-                <InstagramAnalytics accountId={account.id} initial={account.socialAccountMetricSnapshots?.[0] ?? null} canRefresh />
               </div>
             ))}
           </section>
