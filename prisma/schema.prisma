@@ -253,14 +253,10 @@ model Collaboration {
   creatorProfile CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
   messages      CollaborationMessage[]
   deliverables  Deliverable[]
-  milestones    CollaborationMilestone[]
   agreement     CollaborationAgreement?
   milestones    CollaborationMilestone[]
   events        CollaborationEvent[]
-  @@index([creatorProfileId, status])
-  @@index([campaignId, status])
-}
-
+  @@index([creatorProfileId, stat
 model CollaborationMilestone {
   id              String   @id @default(cuid())
   collaborationId String
