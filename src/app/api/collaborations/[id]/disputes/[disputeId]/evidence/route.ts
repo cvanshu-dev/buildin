@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  kind: z.enum(["NOTE", "URL", "MESSAGE", "DELIVERABLE", "MILESTONE"]),
+  kind: z.enum(["NOTE", "URL", "MESSAGE", "DELIVERABLE", "MILESTONE", "FILE"]),
   label: z.string().trim().min(2).max(140),
   content: z.string().trim().max(4000).optional(),
   url: z.string().url().max(2048).optional(),
@@ -26,7 +26,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const input = parsed.data;
   if (input.kind === "URL" && (!input.url || !input.url.startsWith("https://"))) return NextResponse.json({ error: "Evidence links must use HTTPS." }, { status: 400 });
   let content = input.content || null, url = input.url || null;
-  if (["MESSAGE", "DELIVERABLE", "MILESTONE"].includes(input.kind)) {
+  if (["MESSAGE", "DELIVERABLE", "MILESTONE", "FILE"].includes(input.kind)) {
     if (!input.referenceId) return NextResponse.json({ error: "A reference ID is required for this evidence type." }, { status: 400 });
     if (input.kind === "MESSAGE") {
       const row = await prisma.collaborationMessage.findFirst({ where: { id: input.referenceId, collaborationId: id }, select: { body: true } });
