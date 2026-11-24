@@ -24,7 +24,7 @@ export async function POST(request:Request) {
       where:{creatorProfileId_platform:{creatorProfileId:profile.id,platform:parsed.data.platform}},
       create:{...parsed.data,profileUrl,creatorProfileId:profile.id},
       update:{handle:parsed.data.handle,profileUrl,followers:parsed.data.followers??null},
-      select:{id:true,platform:true,handle:true,profileUrl:true,followers:true,source:true,profilePictureUrl:true},
+      select:{id:true,platform:true,handle:true,profileUrl:true,followers:true,source:true},
     });
     return NextResponse.json({ok:true,account},{status:201});
   } catch { return NextResponse.json({error:"Unable to save social account."},{status:400}); }
