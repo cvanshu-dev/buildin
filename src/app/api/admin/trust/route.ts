@@ -48,10 +48,10 @@ export async function PATCH(request: Request) {
   if (!report) return NextResponse.json({ error: "Review report not found." }, { status: 404 });
   const status = parsed.data.action === "DISMISS" ? "DISMISSED" : "ACTIONED";
   const reviewStatus = parsed.data.action === "HIDE_REVIEW" ? "HIDDEN" : parsed.data.action === "RESTORE_REVIEW" ? "PUBLISHED" : undefined;
-  await prisma.$transaction([
-    prisma.reviewReport.update({ where: { id: report.id }, data: { status, reviewedById: user.id, reviewedAt: new Date() } }),
-    ...(reviewStatus ? [prisma.review.update({ where: { id: report.reviewId }, data: { status: reviewStatus } })] : []),
-    prisma.auditLog.create({ data: { actorId: user.id, action: `REVIEW_REPORT_${parsed.data.action}`, entityType: "ReviewReport", entityId: report.id, metadata: { reviewId: report.reviewId, reviewStatus: reviewStatus ?? report.review.status } } }),
-  ]);
+  await prisma.$transaction(async tx => {
+    await tx.reviewReport.update({ where: { id: report.id }, data: { status, reviewedById: user.id, reviewedAt: new Date() } });
+    if (reviewStatus) await tx.review.update({ where: { id: report.reviewId }, data: { status: reviewStatus } });
+    await tx.auditLog.create({ data: { actorId: user.id, action: `REVIEW_REPORT_${parsed.data.action}`, entityType: "ReviewReport", entityId: report.id, metadata: { reviewId: report.reviewId, reviewStatus: reviewStatus ?? report.review.status } } });
+  });
   return NextResponse.json({ ok: true, status, reviewStatus: reviewStatus ?? report.review.status });
 }
