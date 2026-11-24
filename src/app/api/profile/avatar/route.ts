@@ -23,7 +23,6 @@ function isCloudinaryAssetUrl(image: string, publicId: string, userId: string) {
 
     const deliveryPath = path.slice(uploadIndex + "/upload/".length);
     const withoutTransforms = deliveryPath.replace(/^(?:[a-zA-Z0-9_,./-]+\/)?(?=v\d+\/)/, "");
-    const publicIdPath = publicId.split("/").map(encodeURIComponent).join("/");
     return (
       publicId.startsWith(`buildin/creators/${userId}/avatar/`) &&
       withoutTransforms.includes(publicId) &&
