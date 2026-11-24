@@ -300,7 +300,6 @@ export function ProfileWorkspace({
         body: JSON.stringify({
           platform,
           handle,
-          profileUrl: url,
         }),
       });
 
@@ -496,7 +495,7 @@ export function ProfileWorkspace({
           </section>
 
           <section className={panel}>
-            <h2 className="font-semibold">Social accounts</h2><p className="mt-1 text-xs text-slate-600">Enter your public profile URL. You do not need to connect Instagram or share your password.</p>
+            <h2 className="font-semibold">Social accounts</h2><p className="mt-1 text-xs text-slate-600">Enter your public Instagram username only. You do not need to connect Instagram or share your password.</p>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <select
@@ -529,14 +528,6 @@ export function ProfileWorkspace({
                 }
               />
 
-              <input
-                className="rounded-xl bg-slate-50 p-3"
-                placeholder="Profile URL"
-                value={url}
-                onChange={(event) =>
-                  setUrl(event.target.value)
-                }
-              />
             </div>
 
             <button
