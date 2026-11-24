@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CreatorWorkspaceNav } from "@/components/creator-workspace-nav";
 import { useEffect, useMemo, useState } from "react";
 
 type Campaign = {
@@ -74,16 +75,16 @@ export default function CreatorCampaigns() {
   }
 
   return (
-    <main className="mx-auto mt-8 max-w-6xl text-slate-900">
+    <main className="mx-auto mt-5 max-w-6xl text-slate-900"><CreatorWorkspaceNav/>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div><Link href="/dashboard/creator" className="text-sm text-blue-700">← Creator dashboard</Link><h1 className="mt-3 text-3xl font-semibold">Discover campaigns</h1><p className="mt-2 text-sm text-slate-600">Find relevant brand campaigns and submit a tailored pitch.</p></div>
         <p className="text-sm text-slate-600">{filtered.length} campaigns</p>
       </div>
       <div className="mt-6 grid gap-3 md:grid-cols-[1fr_240px]">
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search campaign, brand, brief or location" className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm" />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-slate-200 bg-zinc-900 p-3 text-sm"><option value="ALL">All categories</option>{categories.map((item) => <option key={item} value={item}>{item}</option>)}</select>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900"><option value="ALL">All categories</option>{categories.map((item) => <option key={item} value={item}>{item}</option>)}</select>
       </div>
-      {(error || notice) && <p role="status" className={`mt-4 rounded-xl border p-3 text-sm ${error ? "border-red-300/20 text-red-200" : "border-lime-300/20 text-blue-700"}`}>{error || notice}</p>}
+      {(error || notice) && <p role="status" className={`mt-4 rounded-xl border p-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error || notice}</p>}
       {loading ? <p className="mt-8 text-sm text-slate-600">Loading campaigns…</p> : filtered.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-slate-200 p-10 text-center"><p className="font-medium">No matching campaigns</p><p className="mt-2 text-sm text-slate-600">Try another search or category. New campaigns appear here when brands publish them.</p></div> : (
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           {filtered.map((campaign) => {

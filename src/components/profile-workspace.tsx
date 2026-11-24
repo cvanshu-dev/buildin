@@ -82,6 +82,7 @@ export function ProfileWorkspace({
   const [portfolioPublicId, setPortfolioPublicId] = useState("");
   const [portfolioResourceType, setPortfolioResourceType] = useState<"image" | "video" | "raw" | "">("");
   const [platform, setPlatform] = useState("INSTAGRAM");
+  const [creatorSection, setCreatorSection] = useState<"profile" | "portfolio" | "social" | "verification">("profile");
   const [handle, setHandle] = useState("");
 
   // Load profile and latest verification status.
@@ -387,9 +388,12 @@ export function ProfileWorkspace({
 
   return (
     <div className="mt-8 space-y-6">
-      <section className={panel}>
+      {type === "CREATOR" && <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2">
+        {([{id:"profile",label:"Profile details"},{id:"portfolio",label:"Portfolio"},{id:"social",label:"Social accounts"},{id:"verification",label:"Verification"}] as const).map(tab => <button key={tab.id} type="button" onClick={() => setCreatorSection(tab.id)} className={"rounded-xl px-4 py-2.5 text-sm font-semibold transition " + (creatorSection === tab.id ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100")}>{tab.label}</button>)}
+      </div>}
+      {(type === "BRAND" || creatorSection === "profile") && <section className={panel}>
         <h2 className="mb-2 text-lg font-semibold">{type === "CREATOR" ? "Profile picture" : "Brand logo"}</h2>
-        <p className="mb-4 text-sm text-slate-600">Upload a profile picture manually. Add your public Instagram username below; You can add your public Instagram username in Social accounts.</p>
+        <p className="mb-4 text-sm text-slate-600">{type === "CREATOR" ? "Upload a clear profile image so brands can recognise your creator profile." : "Upload a clear logo so customers can recognise your brand."}</p>
         <div className="flex flex-wrap items-center gap-4">
           {(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ? <img src={(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ?? ""} alt="Profile" className="h-20 w-20 rounded-full border border-slate-200 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-500">{(profile.displayName ?? profile.name ?? "B").slice(0,1).toUpperCase()}</div>}
           <MediaUploader context={type === "CREATOR" ? "avatar" : "brand-logo"} accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={async (asset) => {
@@ -403,10 +407,10 @@ export function ProfileWorkspace({
             await load();
           }} />
         </div>
-      </section>
+      </section>}
 
       {/* Profile details */}
-      <section className={panel}>
+      {(type === "BRAND" || creatorSection === "profile") && <section className={panel}>
         <h2 className="mb-5 text-lg font-semibold">
           Profile details
         </h2>
@@ -446,12 +450,12 @@ export function ProfileWorkspace({
         >
           Save profile
         </button>
-      </section>
+      </section>}
 
       {/* Creator portfolio and social accounts */}
       {type === "CREATOR" && (
         <>
-          <section className={panel}>
+          {creatorSection === "portfolio" && <section className={panel}>
             <h2 className="font-semibold">Portfolio</h2>
 
             <p className="mt-1 text-xs text-slate-600">Upload images or videos directly to your portfolio, or paste a hosted media URL.</p>
@@ -473,7 +477,7 @@ export function ProfileWorkspace({
             <button
               disabled={busy || !title.trim() || !url.trim()}
               onClick={addPortfolio}
-              className="mt-3 rounded-full border border-white/20 px-5 py-2 text-sm disabled:opacity-50"
+              className="mt-3 rounded-full border border-slate-200 px-5 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
               Add item
             </button>
@@ -489,14 +493,14 @@ export function ProfileWorkspace({
                 </li>
               ))}
             </ul>
-          </section>
+          </section>}
 
-          <section className={panel}>
+          {creatorSection === "social" && <section className={panel}>
             <h2 className="font-semibold">Social accounts</h2><p className="mt-1 text-xs text-slate-600">Enter your public Instagram username only. You do not need to connect Instagram or share your password.</p>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <select
-                className="rounded-xl bg-zinc-900 p-3"
+                className="rounded-xl border border-slate-200 bg-white p-3 text-slate-900"
                 value={platform}
                 onChange={(event) =>
                   setPlatform(event.target.value)
@@ -530,7 +534,7 @@ export function ProfileWorkspace({
             <button
               onClick={addSocial}
               disabled={busy}
-              className="mt-3 rounded-full border border-white/20 px-5 py-2 text-sm disabled:opacity-50"
+              className="mt-3 rounded-full border border-slate-200 px-5 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
               Save account
             </button>
@@ -545,17 +549,17 @@ export function ProfileWorkspace({
                 </li>
               ))}
             </ul>
-          </section>
+          </section>}
         </>
       )}
 
       {/* Verification */}
-      <section className={panel}>
+      {(type === "BRAND" || creatorSection === "verification") && <section className={panel}>
         <h2 className="font-semibold">Verification</h2>
 
         {verification?.status === "APPROVED" ? (
           <div className="mt-3">
-            <p className="font-medium text-green-400">
+            <p className="font-medium text-emerald-700">
               ✓ Your {type === "BRAND" ? "brand" : "creator"} is verified
             </p>
 
@@ -574,7 +578,7 @@ export function ProfileWorkspace({
           </div>
         ) : verification?.status === "PENDING" ? (
           <div className="mt-3">
-            <p className="font-medium text-yellow-400">
+            <p className="font-medium text-amber-700">
               Verification pending
             </p>
 
@@ -586,7 +590,7 @@ export function ProfileWorkspace({
           <div className="mt-3">
             {verification?.status === "REJECTED" && (
               <div className="mb-3">
-                <p className="font-medium text-red-400">
+                <p className="font-medium text-red-700">
                   Verification rejected
                 </p>
 
@@ -614,7 +618,7 @@ export function ProfileWorkspace({
             </button>
           </div>
         )}
-      </section>
+      </section>}
 
       {message && (
         <p role="status" className="text-sm text-slate-700">

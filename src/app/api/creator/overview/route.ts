@@ -9,7 +9,7 @@ export async function GET() {
 
   const profile = await prisma.creatorProfile.findUnique({
     where: { userId: user.id },
-    select: { id: true, displayName: true, isPublic: true, categories: true, specialties: true, portfolioItems: { select: { id: true } }, socialAccounts: { select: { id: true } } },
+    select: { id: true, displayName: true, bio: true, city: true, state: true, isPublic: true, categories: true, specialties: true, portfolioItems: { select: { id: true } }, socialAccounts: { select: { id: true } } },
   });
   if (!profile) return NextResponse.json({ error: "Creator profile not found." }, { status: 404 });
 
