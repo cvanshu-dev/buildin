@@ -19,6 +19,7 @@ async function participant(id: string, userId: string) {
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!["BRAND", "CREATOR"].includes(user.role)) return NextResponse.json({ error: "Only collaboration participants can access reviews." }, { status: 403 });
   const { id } = await context.params;
   const collaboration = await participant(id, user.id);
   if (!collaboration) return NextResponse.json({ error: "Collaboration not found." }, { status: 404 });
@@ -47,7 +48,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (collaboration.status !== "COMPLETED") return NextResponse.json({ error: "Reviews are available only after a collaboration is completed." }, { status: 409 });
   const reviewerRole = user.role;
   const targetUserId = reviewerRole === "BRAND" ? collaboration.creatorProfile.userId : null;
-  const targetBrandId = reviewerRole === "CREATOR" ? (await prisma.campaign.findUnique({ where: { id: (await prisma.collaboration.findUnique({ where: { id }, select: { campaignId: true } }))!.campaignId }, select: { brandId: true } }))?.brandId : null;
+  const targetBrandId = reviewerRole === "CREATOR" ? collaboration.campaign.brandId : null;
   try {
     const review = await prisma.review.create({ data: {
       collaborationId: id, reviewerId: user.id, reviewerRole, targetUserId, targetBrandId,
