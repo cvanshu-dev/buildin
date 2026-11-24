@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
+import { findOwnedVerifiedMedia, isCloudinarySecureUrl } from "@/lib/media-assets";
 
 const createSchema = z.object({
   title: z.string().trim().min(2).max(120),
@@ -70,10 +71,23 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (action === "SUBMIT") {
     if (!isCreator) return NextResponse.json({ error: "Only the creator can submit work." }, { status: 403 });
     if (!assetUrl && !assets?.length) return NextResponse.json({ error: "Upload at least one deliverable file or provide a URL." }, { status: 400 });
-    if (assets?.some((asset) => {
-      const url = new URL(asset.url);
-      return url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || !asset.publicId.startsWith(`buildin/collaborations/${id}/deliverables/`);
-    })) return NextResponse.json({ error: "All uploaded files must belong to this collaboration." }, { status: 400 });
+    if (assets && new Set(assets.map((asset) => asset.publicId)).size !== assets.length) {
+      return NextResponse.json({ error: "Duplicate file references are not allowed." }, { status: 400 });
+    }
+    if (assets?.some((asset) => !isCloudinarySecureUrl(asset.url) || !asset.publicId.startsWith(`buildin/collaborations/${id}/deliverables/`))) {
+      return NextResponse.json({ error: "All uploaded files must belong to this collaboration." }, { status: 400 });
+    }
+    if (assets?.length) {
+      const verified = await Promise.all(assets.map((asset) => findOwnedVerifiedMedia({
+        ownerUserId: user.id,
+        publicId: asset.publicId,
+        context: "deliverable",
+        expectedPrefix: `buildin/collaborations/${id}/deliverables/`,
+      })));
+      if (verified.some((record, index) => !record || record.resourceType !== assets[index].resourceType || record.bytes !== assets[index].bytes)) {
+        return NextResponse.json({ error: "One or more files are unverified, already attached, or have mismatched metadata." }, { status: 403 });
+      }
+    }
     if (item.status !== "PENDING" && item.status !== "CHANGES_REQUESTED") return NextResponse.json({ error: "Only pending deliverables or requested revisions can be submitted." }, { status: 409 });
   } else {
     if (isCreator) return NextResponse.json({ error: "Only the brand can review work." }, { status: 403 });
