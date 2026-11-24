@@ -12,7 +12,6 @@ type Overview = {
   unreadNotifications:number;
   campaignCount:number;
 };
-const statusTone=(s:string)=>["ACCEPTED","APPROVED","ACTIVE","COMPLETED"].includes(s)?"bg-emerald-50 text-emerald-700":["REJECTED","CANCELLED"].includes(s)?"bg-red-50 text-red-700":s==="CHANGES_REQUESTED"?"bg-amber-50 text-amber-800":"bg-blue-50 text-blue-700";
 const money=(n:number|null)=>n==null?"Not agreed":new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n);
 export function CreatorDashboardWorkspace(){
  const [data,setData]=useState<Overview|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState("");
@@ -53,7 +52,7 @@ export function CreatorDashboardWorkspace(){
   </section>
   <section className="rounded-2xl border border-slate-200 bg-white p-6">
    <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[.15em] text-blue-700">Latest activity</p><h3 className="mt-1 text-lg font-semibold text-slate-950">Recent updates</h3></div><Link href="/dashboard/creator/notifications" className="text-sm font-semibold text-blue-700">Inbox <ArrowRight className="inline" size={14}/></Link></div>
-   {data.notifications.length===0?<p className="mt-4 text-sm text-slate-500">You're all caught up. New messages and campaign updates will appear here.</p>:<div className="mt-3 divide-y divide-slate-100">{data.notifications.slice(0,3).map(n=><div key={n.id} className="flex items-start gap-3 py-3"><span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.readAt?"bg-slate-200":"bg-blue-600"}`}/><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-slate-900">{n.title}</p><p className="mt-1 line-clamp-2 text-sm text-slate-600">{n.body}</p><p className="mt-1 text-xs text-slate-400">{new Date(n.createdAt).toLocaleString("en-IN")}</p></div></div>)}</div>}
+   {data.notifications.length===0?<p className="mt-4 text-sm text-slate-500">You&apos;re all caught up. New messages and campaign updates will appear here.</p>:<div className="mt-3 divide-y divide-slate-100">{data.notifications.slice(0,3).map(n=><div key={n.id} className="flex items-start gap-3 py-3"><span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.readAt?"bg-slate-200":"bg-blue-600"}`}/><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-slate-900">{n.title}</p><p className="mt-1 line-clamp-2 text-sm text-slate-600">{n.body}</p><p className="mt-1 text-xs text-slate-400">{new Date(n.createdAt).toLocaleString("en-IN")}</p></div></div>)}</div>}
   </section>
  </div>;
 }
