@@ -39,3 +39,22 @@ CREATE TABLE "DeliverableSubmissionAttachment" (
 CREATE INDEX "DeliverableSubmissionAttachment_submissionId_createdAt_idx" ON "DeliverableSubmissionAttachment"("submissionId", "createdAt");
 ALTER TABLE "DeliverableSubmissionAttachment" ADD CONSTRAINT "DeliverableSubmissionAttachment_submissionId_fkey"
   FOREIGN KEY ("submissionId") REFERENCES "DeliverableSubmission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE TABLE "MediaAsset" (
+  "id" TEXT NOT NULL,
+  "ownerUserId" TEXT NOT NULL,
+  "publicId" TEXT NOT NULL,
+  "resourceType" TEXT NOT NULL,
+  "secureUrl" TEXT NOT NULL,
+  "context" TEXT NOT NULL,
+  "bytes" INTEGER NOT NULL,
+  "format" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "linkedAt" TIMESTAMP(3),
+  CONSTRAINT "MediaAsset_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX "MediaAsset_publicId_key" ON "MediaAsset"("publicId");
+CREATE INDEX "MediaAsset_linkedAt_createdAt_idx" ON "MediaAsset"("linkedAt", "createdAt");
+CREATE INDEX "MediaAsset_ownerUserId_context_idx" ON "MediaAsset"("ownerUserId", "context");
+ALTER TABLE "MediaAsset" ADD CONSTRAINT "MediaAsset_ownerUserId_fkey"
+  FOREIGN KEY ("ownerUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
