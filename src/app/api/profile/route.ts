@@ -18,6 +18,7 @@ const creatorSchema = z.object({
 
 const brandSchema = z.object({
   logoUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
+  logoPublicId: z.string().min(1).max(240).optional(),
   name: z.string().trim().min(2).max(100),
   website: text(200),
   industry: text(80),
@@ -154,15 +155,18 @@ export async function PUT(request: Request) {
       );
     }
 
+    if (parsed.data.logoPublicId && (!parsed.data.logoUrl || !parsed.data.logoPublicId.startsWith(`buildin/brands/${membership.brandId}/logo/`))) return NextResponse.json({ error: "Invalid brand logo media reference." }, { status: 400 });
+    const { logoPublicId, ...brandData } = parsed.data;
     const profile = await prisma.brand.update({
       where: { id: membership.brandId },
       data: {
-        ...parsed.data,
-        ...(parsed.data.logoUrl !== undefined ? { logoUrl: parsed.data.logoUrl || null } : {}),
-        website: parsed.data.website || null,
-        contactEmail: parsed.data.contactEmail || null,
+        ...brandData,
+        ...(brandData.logoUrl !== undefined ? { logoUrl: brandData.logoUrl || null } : {}),
+        website: brandData.website || null,
+        contactEmail: brandData.contactEmail || null,
       },
     });
+    if (logoPublicId) await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: logoPublicId }, data: { linkedAt: new Date() } });
 
     return NextResponse.json({ ok: true, profile });
   }
