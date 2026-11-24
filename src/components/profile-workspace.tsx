@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { MediaUploader } from "@/components/media-uploader";
+import { InstagramAnalytics } from "@/components/instagram-analytics";
 
 type PortfolioItem = {
   id: string;
@@ -19,6 +20,7 @@ type SocialAccount = {
   followers?: number | null;
   source?: string;
   profilePictureUrl?: string | null;
+  socialAccountMetricSnapshots?: Array<{ id: string; followers: number; followingCount: number | null; averageLikes: number | null; averageComments: number | null; averageViews: number | null; engagementRate: number | null; postsAnalyzed: number; source: string; recordedAt: string; recentPosts?: unknown }>;
 };
 
 type VerificationItem = {
@@ -550,12 +552,17 @@ export function ProfileWorkspace({
                 <li key={account.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 text-sm">
                   <div className="flex min-w-0 items-center gap-3">
                     {account.platform === "INSTAGRAM" && account.profilePictureUrl && <img src={account.profilePictureUrl} alt="" className="h-9 w-9 rounded-full object-cover" />}
-                    <div className="min-w-0"><p className="font-medium">{account.platform} · {account.handle}</p><p className="text-xs text-slate-500">{account.source === "INSTAGRAM_OAUTH" ? "Connected through Meta" : "Manually added"}{account.followers != null ? ` · ${account.followers.toLocaleString("en-IN")} followers` : ""}</p></div>
+                    <div className="min-w-0"><p className="font-medium">{account.platform} · {account.handle}</p><p className="text-xs text-slate-500">{account.source === "PUBLIC_DATA_PROVIDER" ? "Public data provider" : "Manually added"}{account.followers != null ? ` · ${account.followers.toLocaleString("en-IN")} followers` : ""}</p></div>
                   </div>
                   {account.profileUrl && <a href={account.profileUrl} target="_blank" rel="noreferrer" className="shrink-0 text-blue-700 underline">Open</a>}
                 </li>
               ))}
             </ul>
+            {(profile.socialAccounts ?? []).filter((account) => account.platform === "INSTAGRAM").map((account) => (
+              <div key={account.id} className="mt-4">
+                <InstagramAnalytics accountId={account.id} initial={account.socialAccountMetricSnapshots?.[0] ?? null} canRefresh />
+              </div>
+            ))}
           </section>
         </>
       )}
