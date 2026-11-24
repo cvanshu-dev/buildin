@@ -397,10 +397,10 @@ export function ProfileWorkspace({
           {(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ? <img src={(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ?? ""} alt="Profile" className="h-20 w-20 rounded-full border border-slate-200 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-500">{(profile.displayName ?? profile.name ?? "B").slice(0,1).toUpperCase()}</div>}
           <MediaUploader context={type === "CREATOR" ? "avatar" : "brand-logo"} accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={async (asset) => {
             if (type === "CREATOR") {
-              const response = await fetch("/api/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: asset.secure_url }) });
+              const response = await fetch("/api/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: asset.secure_url, publicId: asset.public_id }) });
               const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not save profile picture.");
             } else {
-              const response = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, logoUrl: asset.secure_url }) });
+              const response = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, logoUrl: asset.secure_url, logoPublicId: asset.public_id }) });
               const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not save brand logo.");
             }
             await load();
