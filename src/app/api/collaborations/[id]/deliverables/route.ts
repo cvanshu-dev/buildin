@@ -138,6 +138,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     return NextResponse.json({ deliverable: updated });
   } catch (error) {
+    if (error instanceof Error && error.message === "MEDIA_ALREADY_LINKED") {
+      return NextResponse.json({ error: "One or more uploads were attached elsewhere. Refresh and upload again." }, { status: 409 });
+    }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
       return NextResponse.json({ error: "This deliverable changed at the same time. Refresh and retry." }, { status: 409 });
     }
