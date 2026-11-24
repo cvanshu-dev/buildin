@@ -93,6 +93,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         await tx.deliverableSubmission.create({
           data: { deliverableId: item.id, version, assetUrl: submittedUrl, note: submissionNote ?? null, submittedById: user.id, attachments: assets?.length ? { create: assets.map((asset) => ({ fileName: asset.fileName, url: asset.url, publicId: asset.publicId, resourceType: asset.resourceType, bytes: asset.bytes })) } : undefined },
         });
+        if (assets?.length) await tx.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: { in: assets.map((asset) => asset.publicId) } }, data: { linkedAt: new Date() } });
         for (const member of collab.campaign.brand.members) {
           await tx.notification.create({ data: { userId: member.userId, type: "DELIVERABLE_SUBMITTED", title: "Creator submitted work", body: `${user.name} submitted "${item.title}" for ${collab.campaign.title}.`, href: "/dashboard/brand" } });
         }
