@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 type Review = { id: string; rating: number; title: string | null; comment: string; createdAt: string; reviewer: { name: string; role: string } };
 type Evidence = { id: string; kind: string; label: string; content: string | null; url: string | null; submittedBy: { name: string } };
@@ -65,7 +65,7 @@ export function CollaborationTrustPanel({ collaborationId, collaborationStatus, 
     } finally { setBusy(false); }
   }
 
-  async function submitReview(event: React.FormEvent<HTMLFormElement>) {
+  async function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (await send(`/api/collaborations/${collaborationId}/reviews`, { rating, comment }, "Your review has been published.")) setComment("");
   }
