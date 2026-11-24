@@ -534,7 +534,7 @@ export function ProfileWorkspace({
             <button
               onClick={addSocial}
               disabled={busy}
-              className="mt-3 rounded-full border border-white/20 px-5 py-2 text-sm disabled:opacity-50"
+              className="mt-3 rounded-full border border-slate-200 px-5 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
               Save account
             </button>
@@ -559,7 +559,7 @@ export function ProfileWorkspace({
 
         {verification?.status === "APPROVED" ? (
           <div className="mt-3">
-            <p className="font-medium text-green-400">
+            <p className="font-medium text-emerald-700">
               ✓ Your {type === "BRAND" ? "brand" : "creator"} is verified
             </p>
 
@@ -578,7 +578,7 @@ export function ProfileWorkspace({
           </div>
         ) : verification?.status === "PENDING" ? (
           <div className="mt-3">
-            <p className="font-medium text-yellow-400">
+            <p className="font-medium text-amber-700">
               Verification pending
             </p>
 
@@ -590,7 +590,7 @@ export function ProfileWorkspace({
           <div className="mt-3">
             {verification?.status === "REJECTED" && (
               <div className="mb-3">
-                <p className="font-medium text-red-400">
+                <p className="font-medium text-red-700">
                   Verification rejected
                 </p>
 
