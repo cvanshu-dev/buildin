@@ -40,7 +40,7 @@ export function MediaUploader({
       return;
     }
     const accepted = accept.split(",").map((item) => item.trim()).filter(Boolean);
-    if (selected.some((file) => !accepted.includes(file.type))) {
+    if (selected.some((file) => !accepted.some((rule) => rule.startsWith(".") ? file.name.toLowerCase().endsWith(rule.toLowerCase()) : file.type === rule))) {
       setError("One or more selected files have an unsupported file type.");
       return;
     }
@@ -97,7 +97,7 @@ export function MediaUploader({
         if (!verifyResponse.ok) throw new Error(verified.error ?? "Uploaded file did not pass server validation.");
 
         await onUpload({
-          secure_url: verified.secureUrl,
+          secure_url: verified.resourceType === "image" ? verified.secureUrl.replace("/upload/", "/upload/f_auto,q_auto/") : verified.resourceType === "video" ? verified.secureUrl.replace("/upload/", "/upload/q_auto/") : verified.secureUrl,
           public_id: verified.publicId,
           resource_type: verified.resourceType,
           bytes: verified.bytes,
