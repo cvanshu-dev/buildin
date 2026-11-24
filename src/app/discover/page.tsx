@@ -11,6 +11,8 @@ type Creator = {
   state: string | null;
   categories: string[];
   specialties: string[];
+  rating: number | null;
+  reviewCount: number;
   portfolioItems: { id: string; title: string; mediaUrl: string }[];
   socialAccounts: { platform: string; handle: string; followers: number | null }[];
 };
@@ -60,6 +62,7 @@ export default function DiscoverPage() {
             <article key={creator.id} className="rounded-2xl border border-slate-200 bg-white p-5">
               <h2 className="text-xl font-semibold">{creator.displayName || "Creator"}</h2>
               <p className="mt-1 text-sm text-slate-600">{[creator.city, creator.state].filter(Boolean).join(", ")}</p>
+              <p className="mt-2 text-sm">{creator.rating ? <><span className="text-amber-500">★</span> <strong>{creator.rating.toFixed(1)}</strong> <span className="text-slate-500">({creator.reviewCount} completed-collaboration reviews)</span></> : <span className="text-slate-500">No reviews yet</span>}</p>
               <p className="mt-4 line-clamp-4 text-sm text-slate-700">{creator.bio}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {creator.categories.map((item) => <span key={item} className="rounded-full bg-white/10 px-3 py-1 text-xs">{item}</span>)}
