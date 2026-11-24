@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 
 const updateSchema=z.object({
  title:z.string().trim().min(4).max(120).optional(),brief:z.string().trim().min(30).max(5000).optional(),
+ coverImageUrl:z.string().url().max(2048).nullable().optional(),
  objectives:z.array(z.string().trim().min(2).max(100)).max(10).optional(),categories:z.array(z.string().trim().min(1).max(50)).min(1).max(12).optional(),
  platforms:z.array(z.string().trim().min(1).max(30)).max(8).optional(),location:z.string().trim().max(100).nullable().optional(),
  budgetMin:z.number().int().min(0).nullable().optional(),budgetMax:z.number().int().min(0).nullable().optional(),
