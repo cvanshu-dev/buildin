@@ -73,13 +73,17 @@ Configure server-only `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDI
 
 Supported upload surfaces: creator avatars and portfolio media, brand logos, campaign covers, campaign brief attachments, and collaboration deliverables. Campaign briefs support up to 20 attachments, 25 MB each. Deliverable submissions support up to 10 attachments per version, 100 MB each. Avatars, logos, and campaign covers are limited to 8 MB.
 
-### Instagram creator profiles and manual review
+### Instagram public analytics
 
-Creators enter their public Instagram username in their Buildin profile. They never connect Instagram, authorize Buildin, or share their password. Buildin does not connect a platform-owned Instagram account. Meta's official API does not provide reliable access to arbitrary public accounts by username, so automated follower/following and recent post/Reel analytics are not enabled in this build. Staff review the submitted profile and any supporting evidence manually. Do not treat self-reported metrics as verified.
+Creators enter only their Instagram username. Neither creators nor Buildin connect an Instagram account, provide passwords, or use Meta OAuth. When `APIFY_API_TOKEN` is configured, the server calls the Apify `apify/instagram-scraper` Actor for public profile details and up to 12 recent posts. Set `APIFY_INSTAGRAM_ACTOR_ID` to override the Actor.
+
+Buildin stores timestamped snapshots with follower/following counts, average available likes/comments, average available video views, calculated engagement rate, and recent post samples. Missing or hidden values remain null and are displayed as unavailable; views are not reach or impressions. These are public-data estimates, not private Instagram Insights or audited/verified statistics. Private accounts and data hidden from logged-out visitors may not be available. Automated collection depends on a third-party scraper and Instagram's public pages, which can change or block requests. Review Instagram's terms and applicable privacy requirements before production use.
+
+Creators can run a refresh from their profile workspace. Admins can refresh during manual verification review. Public creator profiles display the latest snapshot to visitors, including brands. Configure the server-only `APIFY_API_TOKEN`; never expose it through a `NEXT_PUBLIC_*` variable.
 
 ### Database migration
 
-Apply committed migrations with `npx prisma migrate deploy`, then run `npx prisma generate`. The Phase 5 migrations add campaign brief attachment records and per-submission deliverable attachment records. A later cleanup migration removes the unused platform Instagram OAuth connection and token columns.
+Apply committed migrations with `npx prisma migrate deploy`, then run `npx prisma generate`. The Phase 5 migrations add campaign brief attachment records, per-submission deliverable attachment records, remove the unused platform Instagram OAuth connection and token columns, and add public Instagram analytics snapshot fields.
 
 ### Media deletion
 
@@ -89,9 +93,8 @@ Configure `CRON_SECRET` and schedule authenticated GET requests to `/api/media/c
 
 ### Deployment checklist
 
-- Configure all Cloudinary and Meta environment variables on the deployment target; never expose API secrets through `NEXT_PUBLIC_*`.
-- Add the Instagram callback URL to the Meta app exactly as configured in `INSTAGRAM_REDIRECT_URI`.
+- Configure Cloudinary and `APIFY_API_TOKEN` on the deployment target; never expose API secrets through `NEXT_PUBLIC_*`.
 - Apply migrations and regenerate Prisma Client.
 - Test image, video, PDF/document uploads and deletion against a real Cloudinary account.
-- Test the platform Instagram OAuth connection using a Meta app with Business Discovery access and an eligible professional Instagram account. Then test Business Discovery against eligible public creator accounts.
+- Test public Instagram username analysis against public accounts; confirm private/hidden metrics remain unavailable and refresh failures are handled cleanly.
 - Run `npm run typecheck`, `npm run lint`, and `npm run build`, then exercise the complete flows in staging.
