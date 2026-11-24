@@ -9,10 +9,10 @@ type TokenResponse = { access_token?: string; user_id?: number | string; expires
 type InstagramProfile = { id?: string; user_id?: string; username?: string; name?: string; profile_picture_url?: string; followers_count?: number };
 
 function returnToDashboard(request: NextRequest, status: string) {
-  const url = new URL("/dashboard/creator/profile", request.url);
+  const url = new URL("/dashboard/creator", request.url);
   url.searchParams.set("instagram", status);
   const response = NextResponse.redirect(url);
-  response.cookies.delete("buildin_instagram_oauth_state");
+  response.cookies.set("buildin_instagram_oauth_state", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/integrations/instagram", maxAge: 0 });
   return response;
 }
 
