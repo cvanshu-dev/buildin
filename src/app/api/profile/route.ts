@@ -17,6 +17,7 @@ const creatorSchema = z.object({
 });
 
 const brandSchema = z.object({
+  logoUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
   name: z.string().trim().min(2).max(100),
   website: text(200),
   industry: text(80),
@@ -43,6 +44,7 @@ export async function GET() {
       include: {
         portfolioItems: { orderBy: { sortOrder: "asc" } },
         socialAccounts: true,
+        user: { select: { image: true } },
       },
     });
 
@@ -156,6 +158,7 @@ export async function PUT(request: Request) {
       where: { id: membership.brandId },
       data: {
         ...parsed.data,
+        logoUrl: parsed.data.logoUrl || null,
         website: parsed.data.website || null,
         contactEmail: parsed.data.contactEmail || null,
       },
