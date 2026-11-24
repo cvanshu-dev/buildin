@@ -158,7 +158,7 @@ export async function PUT(request: Request) {
       where: { id: membership.brandId },
       data: {
         ...parsed.data,
-        logoUrl: parsed.data.logoUrl || null,
+        ...(parsed.data.logoUrl !== undefined ? { logoUrl: parsed.data.logoUrl || null } : {}),
         website: parsed.data.website || null,
         contactEmail: parsed.data.contactEmail || null,
       },
