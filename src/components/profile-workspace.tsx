@@ -392,7 +392,7 @@ export function ProfileWorkspace({
     <div className="mt-8 space-y-6">
       <section className={panel}>
         <h2 className="mb-2 text-lg font-semibold">{type === "CREATOR" ? "Profile picture" : "Brand logo"}</h2>
-        <p className="mb-4 text-sm text-slate-600">Upload manually or connect a professional Instagram account through Meta to sync its profile picture.</p>
+        <p className="mb-4 text-sm text-slate-600">Upload a profile picture manually. Add your public Instagram username below; Buildin’s team analyses available public metrics during review.</p>
         <div className="flex flex-wrap items-center gap-4">
           {(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ? <img src={(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ?? ""} alt="Profile" className="h-20 w-20 rounded-full border border-slate-200 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-500">{(profile.displayName ?? profile.name ?? "B").slice(0,1).toUpperCase()}</div>}
           <MediaUploader context={type === "CREATOR" ? "avatar" : "brand-logo"} accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={async (asset) => {
@@ -495,7 +495,7 @@ export function ProfileWorkspace({
           </section>
 
           <section className={panel}>
-            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-semibold">Social accounts</h2><div className="flex gap-2"><a href="/api/integrations/instagram/start" className="rounded-full bg-pink-600 px-4 py-2 text-xs font-semibold text-white">Connect Instagram</a>{profile.socialAccounts?.some(a=>a.platform==="INSTAGRAM"&&a.source==="INSTAGRAM_OAUTH")&&<button type="button" onClick={async()=>{setBusy(true);try{const r=await fetch("/api/integrations/instagram/refresh",{method:"POST"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Refresh failed.");setMessage("Instagram connection refreshed.");await load();}catch(e){setMessage(e instanceof Error?e.message:"Refresh failed.");}finally{setBusy(false);}}} className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold">Refresh connection</button>}</div></div>
+            <h2 className="font-semibold">Social accounts</h2><p className="mt-1 text-xs text-slate-600">Enter your public profile URL. You do not need to connect Instagram or share your password.</p>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <select
@@ -521,7 +521,7 @@ export function ProfileWorkspace({
 
               <input
                 className="rounded-xl bg-slate-50 p-3"
-                placeholder="@handle"
+                placeholder="@username"
                 value={handle}
                 onChange={(event) =>
                   setHandle(event.target.value)
