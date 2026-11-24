@@ -23,7 +23,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         include: {
           submissions: {
             orderBy: { version: "desc" },
-            select: { id: true, version: true, assetUrl: true, note: true, createdAt: true },
+            select: { id: true, version: true, assetUrl: true, note: true, createdAt: true, attachments: { select: { id: true, fileName: true, url: true, resourceType: true, bytes: true } } },
           },
         },
       },

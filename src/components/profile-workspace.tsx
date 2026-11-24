@@ -15,6 +15,11 @@ type SocialAccount = {
   id: string;
   platform: string;
   handle: string;
+  profileUrl?: string;
+  followers?: number | null;
+  source?: string;
+  profilePictureUrl?: string | null;
+  tokenExpiresAt?: string | null;
 };
 
 type VerificationItem = {
@@ -76,6 +81,8 @@ export function ProfileWorkspace({
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [portfolioMediaType, setPortfolioMediaType] = useState<"IMAGE" | "VIDEO">("IMAGE");
+  const [portfolioPublicId, setPortfolioPublicId] = useState("");
+  const [portfolioResourceType, setPortfolioResourceType] = useState<"image" | "video" | "raw" | "">("");
   const [platform, setPlatform] = useState("INSTAGRAM");
   const [handle, setHandle] = useState("");
 
@@ -239,6 +246,7 @@ export function ProfileWorkspace({
           title,
           mediaUrl: url,
           mediaType: portfolioMediaType,
+          ...(portfolioPublicId && portfolioResourceType ? { publicId: portfolioPublicId, resourceType: portfolioResourceType } : {}),
         }),
       });
 
@@ -255,6 +263,8 @@ export function ProfileWorkspace({
       setTitle("");
       setUrl("");
       setPortfolioMediaType("IMAGE");
+      setPortfolioPublicId("");
+      setPortfolioResourceType("");
       setMessage("Portfolio item added.");
 
       await load();
@@ -268,6 +278,11 @@ export function ProfileWorkspace({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function removePortfolio(id: string) {
+    setBusy(true);
+    try { const response = await fetch(`/api/portfolio?id=${encodeURIComponent(id)}`, { method: "DELETE" }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to delete portfolio item."); setMessage("Portfolio item removed."); await load(); } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to delete portfolio item."); } finally { setBusy(false); }
   }
 
   // Add social account.
@@ -377,15 +392,15 @@ export function ProfileWorkspace({
     <div className="mt-8 space-y-6">
       <section className={panel}>
         <h2 className="mb-2 text-lg font-semibold">{type === "CREATOR" ? "Profile picture" : "Brand logo"}</h2>
-        <p className="mb-4 text-sm text-slate-600">Upload a clear image. Instagram profile synchronization will be added with the official Meta integration.</p>
+        <p className="mb-4 text-sm text-slate-600">Upload manually or connect a professional Instagram account through Meta to sync its profile picture.</p>
         <div className="flex flex-wrap items-center gap-4">
           {(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ? <img src={(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ?? ""} alt="Profile" className="h-20 w-20 rounded-full border border-slate-200 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-500">{(profile.displayName ?? profile.name ?? "B").slice(0,1).toUpperCase()}</div>}
           <MediaUploader context={type === "CREATOR" ? "avatar" : "brand-logo"} accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={async (asset) => {
             if (type === "CREATOR") {
-              const response = await fetch("/api/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: asset.secure_url }) });
+              const response = await fetch("/api/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: asset.secure_url, publicId: asset.public_id }) });
               const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not save profile picture.");
             } else {
-              const response = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, logoUrl: asset.secure_url }) });
+              const response = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, logoUrl: asset.secure_url, logoPublicId: asset.public_id }) });
               const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not save brand logo.");
             }
             await load();
@@ -454,8 +469,8 @@ export function ProfileWorkspace({
                 }
               />
 
-              <input className="rounded-xl bg-slate-50 p-3" placeholder="Public media URL (optional if uploaded)" value={url} onChange={(event) => setUrl(event.target.value)} />
-              <div className="md:col-span-2"><MediaUploader context="portfolio" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" maxSizeMb={100} onUpload={(asset) => { setUrl(asset.secure_url); setPortfolioMediaType(asset.resource_type === "video" ? "VIDEO" : "IMAGE"); }} /></div>
+              <input className="rounded-xl bg-slate-50 p-3" placeholder="Public media URL (optional if uploaded)" value={url} onChange={(event) => { setUrl(event.target.value); setPortfolioPublicId(""); setPortfolioResourceType(""); }} />
+              <div className="md:col-span-2"><MediaUploader context="portfolio" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" maxSizeMb={100} onUpload={(asset) => { setUrl(asset.secure_url); setPortfolioMediaType(asset.resource_type === "video" ? "VIDEO" : "IMAGE"); setPortfolioPublicId(asset.public_id); setPortfolioResourceType(asset.resource_type as "image" | "video" | "raw"); }} /></div>
             </div>
 
             <button
@@ -468,27 +483,19 @@ export function ProfileWorkspace({
 
             <ul className="mt-4 space-y-2">
               {(profile.portfolioItems ?? []).map((item) => (
-                <li
-                  key={item.id}
-                  className="flex justify-between rounded-lg border border-slate-200 p-3 text-sm"
-                >
-                  {item.title}
-
-                  <a
-                    href={item.mediaUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-700"
-                  >
-                    Open
-                  </a>
+                <li key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+                  <span className="min-w-0 truncate">{item.title}</span>
+                  <div className="flex shrink-0 gap-3">
+                    <a href={item.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-700 underline">Open</a>
+                    <button type="button" disabled={busy} onClick={() => void removePortfolio(item.id)} className="text-red-600">Delete</button>
+                  </div>
                 </li>
               ))}
             </ul>
           </section>
 
           <section className={panel}>
-            <h2 className="font-semibold">Social accounts</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-semibold">Social accounts</h2><div className="flex gap-2"><a href="/api/integrations/instagram/start" className="rounded-full bg-pink-600 px-4 py-2 text-xs font-semibold text-white">Connect Instagram</a>{profile.socialAccounts?.some(a=>a.platform==="INSTAGRAM"&&a.source==="INSTAGRAM_OAUTH")&&<button type="button" onClick={async()=>{setBusy(true);try{const r=await fetch("/api/integrations/instagram/refresh",{method:"POST"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Refresh failed.");setMessage("Instagram connection refreshed.");await load();}catch(e){setMessage(e instanceof Error?e.message:"Refresh failed.");}finally{setBusy(false);}}} className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold">Refresh connection</button>}</div></div>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <select
@@ -541,11 +548,12 @@ export function ProfileWorkspace({
 
             <ul className="mt-4 space-y-2">
               {(profile.socialAccounts ?? []).map((account) => (
-                <li
-                  key={account.id}
-                  className="rounded-lg border border-slate-200 p-3 text-sm"
-                >
-                  {account.platform} · {account.handle}
+                <li key={account.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+                  <div className="flex min-w-0 items-center gap-3">
+                    {account.platform === "INSTAGRAM" && account.profilePictureUrl && <img src={account.profilePictureUrl} alt="" className="h-9 w-9 rounded-full object-cover" />}
+                    <div className="min-w-0"><p className="font-medium">{account.platform} · {account.handle}</p><p className="text-xs text-slate-500">{account.source === "INSTAGRAM_OAUTH" ? "Connected through Meta" : "Manually added"}{account.followers != null ? ` · ${account.followers.toLocaleString("en-IN")} followers` : ""}</p></div>
+                  </div>
+                  {account.profileUrl && <a href={account.profileUrl} target="_blank" rel="noreferrer" className="shrink-0 text-blue-700 underline">Open</a>}
                 </li>
               ))}
             </ul>

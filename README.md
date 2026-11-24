@@ -15,7 +15,7 @@ Public account types are **BRAND** and **CREATOR**. Modelling, UGC and other dis
 1. Use Node.js 20.9+.
 2. Install packages: `npm install`.
 3. Copy environment template: `cp .env.example .env`.
-4. Configure `DATABASE_URL`, `BETTER_AUTH_URL` and a strong `BETTER_AUTH_SECRET`.
+4. Configure `DATABASE_URL`, `DIRECT_URL` (the direct, non-pooled PostgreSQL URL for Prisma migrations), `BETTER_AUTH_URL` and a strong `BETTER_AUTH_SECRET`.
 5. Configure Resend using `RESEND_API_KEY`, `RESEND_FROM_EMAIL` and `CONTACT_EMAIL`.
 6. Run `npx prisma generate`.
 7. Apply migrations: `npx prisma migrate dev`.
@@ -65,6 +65,33 @@ Before public launch, still complete:
 Never collect government ID, bank data, or body measurements without a documented purpose, retention policy and access controls.
 
 
-## Phase 5 media uploads
+## Phase 5 — media management
 
-Buildin uses Cloudinary signed direct uploads. Configure server-only `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in local development and production. The API signs upload parameters after checking the authenticated user's role and ownership; the API secret is never exposed to the browser. Creator avatars and portfolio media, brand logos, campaign cover images, and creator deliverable submissions use separate folders. Current client limits are 8 MB for avatars/logos/campaign covers and 100 MB for portfolio/deliverables. Configure Cloudinary account-level upload limits as an additional safeguard. Apply the new migration with `npx prisma migrate deploy`, then run `npx prisma generate`.
+### Cloudinary uploads
+
+Configure server-only `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`. The app issues short-lived signed uploads only after checking the authenticated account, role, campaign/collaboration ownership, and destination folder. The browser uploads directly to Cloudinary; a server-side Admin API verification then checks the actual asset folder, resource type, format, and byte size. Client-side upload progress is shown, but the server check is authoritative. Images are delivered using Cloudinary automatic format and quality transformations.
+
+Supported upload surfaces: creator avatars and portfolio media, brand logos, campaign covers, campaign brief attachments, and collaboration deliverables. Campaign briefs support up to 20 attachments, 25 MB each. Deliverable submissions support up to 10 attachments per version, 100 MB each. Avatars, logos, and campaign covers are limited to 8 MB.
+
+### Instagram profile sync
+
+Buildin supports the official Instagram Login OAuth flow for eligible professional Instagram accounts. Create a Meta Developer app, enable Instagram Login, configure the exact redirect URI `/api/integrations/instagram/callback`, and request the `instagram_business_basic` permission. Set `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`, and a unique 32-byte base64 `INSTAGRAM_TOKEN_ENCRYPTION_KEY` (generate one with `openssl rand -base64 32`). Access tokens are encrypted with AES-256-GCM before storage. The connected account profile and profile picture are synced into the creator profile; users can manually refresh a still-valid long-lived token or reconnect when expired. Personal/consumer accounts and Meta app review/permissions restrictions are not bypassed.
+
+### Database migration
+
+Apply committed migrations with `npx prisma migrate deploy`, then run `npx prisma generate`. The Phase 5 completion migration adds encrypted Instagram connection metadata, campaign brief attachment records, and per-submission deliverable attachment records.
+
+### Media deletion
+
+The media destroy endpoint only accepts public IDs in the authenticated creator's or brand owner's Buildin folders (or that creator's own collaboration folders). Verified uploads are tracked in the `MediaAsset` table. Assets are marked linked when saved to a profile, portfolio, campaign brief, or deliverable submission. Campaign brief attachment and portfolio item removal delete both the Cloudinary asset and its database record.
+
+Configure `CRON_SECRET` and schedule authenticated GET requests to `/api/media/cleanup` and `/api/integrations/instagram/refresh-all` at least daily (for example, with Hostinger Cron Jobs). Media cleanup removes verified uploads that remain unlinked for more than 24 hours, processing up to 100 assets per run. Instagram refresh-all refreshes connected long-lived tokens expiring within 15 days and re-syncs their profile metadata. Keep both endpoints private and do not expose the cron secret in client code.
+
+### Deployment checklist
+
+- Configure all Cloudinary and Meta environment variables on the deployment target; never expose API secrets through `NEXT_PUBLIC_*`.
+- Add the Instagram callback URL to the Meta app exactly as configured in `INSTAGRAM_REDIRECT_URI`.
+- Apply migrations and regenerate Prisma Client.
+- Test image, video, PDF/document uploads and deletion against a real Cloudinary account.
+- Test OAuth using a Meta app with the required permissions and an eligible professional Instagram account.
+- Run `npm run typecheck`, `npm run lint`, and `npm run build`, then exercise the complete flows in staging.
