@@ -17,7 +17,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     where: { id, campaign: { brand: { members: { some: { userId: user.id, title: "Owner" } } } } },
     select: {
       id: true, status: true, creatorProfile: { select: { userId: true } },
-      campaign: { select: { title: true, brand: { select: { members: { select: { userId: true } } } } },
+      campaign: { select: { title: true, brand: { select: { members: { select: { userId: true } } } } } },
       deliverables: { select: { status: true } },
       agreement: { select: { status: true } },
       milestones: { select: { status: true } },
