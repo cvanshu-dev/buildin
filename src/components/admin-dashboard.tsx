@@ -23,7 +23,7 @@ function Status({ value }: { value: string }) {
   const cls = ["ACTIVE", "APPROVED", "PUBLISHED", "COMPLETED", "ACCEPTED"].includes(value)
     ? "bg-blue-50 text-blue-700"
     : ["REJECTED", "SUSPENDED", "CLOSED", "CANCELLED"].includes(value)
-      ? "bg-red-300/10 text-red-200" : "bg-amber-200/10 text-amber-100";
+      ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-800";
   return <span className={`rounded-full px-2.5 py-1 text-[11px] ${cls}`}>{pretty(value)}</span>;
 }
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -46,7 +46,6 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
   const [managers, setManagers] = useState<Row[]>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [pageSize, setPageSize] = useState(20);
@@ -71,7 +70,6 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
         const params = new URLSearchParams();
         if (q) params.set("q", q);
         if (status) params.set(tab === "Verifications" ? "status" : "status", status);
-        if (roleFilter && tab === "Users") params.set("role", roleFilter);
         if (tab !== "Verifications") params.set("page", String(page));
         const r = await fetch(`${endpoints[tab]}?${params.toString()}`, { cache: "no-store" });
         const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Could not load ${tab.toLowerCase()}`);
@@ -81,7 +79,7 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
       }
     } catch (e) { setMessage(e instanceof Error ? e.message : "Request failed"); }
     finally { setLoading(false); }
-  }, [tab, q, status, roleFilter, page]);
+  }, [tab, q, status, page]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -201,6 +199,6 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
       </div>
     </div>}
 
-    {tab !== "Overview" && tab !== "Verifications" && tab !== "Staff" && total > pageSize && <div className="mt-5 flex items-center justify-between text-sm text-slate-600"><span>{total.toLocaleString("en-IN")} records · Page {page} of {Math.ceil(total/pageSize)}</span><div className="flex gap-2"><button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-30">Previous</button><button disabled={page>=Math.ceil(total/pageSize)} onClick={()=>setPage(p=>p+1)} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-30">Next</button></div></div>}
+    {tab !== "Overview" && tab !== "Verifications" && total > pageSize && <div className="mt-5 flex items-center justify-between text-sm text-slate-600"><span>{total.toLocaleString("en-IN")} records · Page {page} of {Math.ceil(total/pageSize)}</span><div className="flex gap-2"><button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-30">Previous</button><button disabled={page>=Math.ceil(total/pageSize)} onClick={()=>setPage(p=>p+1)} className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-30">Next</button></div></div>}
   </div>;
 }
