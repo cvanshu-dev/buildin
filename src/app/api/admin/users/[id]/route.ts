@@ -8,7 +8,7 @@ const schema = z.object({ status: z.enum(["ACTIVE", "SUSPENDED"]) });
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const actor = await getCurrentUser();
   if (!actor) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (actor.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Only a super admin can change account status." }, { status: 403 });
+  if (!["ADMIN", "SUPER_ADMIN"].includes(actor.role)) return NextResponse.json({ error: "Only the administrator can change account status." }, { status: 403 });
   const { id } = await context.params;
   if (id === actor.id) return NextResponse.json({ error: "You cannot suspend your own account." }, { status: 409 });
   const parsed = schema.safeParse(await request.json().catch(() => null));
