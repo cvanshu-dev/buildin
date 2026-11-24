@@ -10,10 +10,31 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid media references." }, { status: 400 });
-  const result = await prisma.mediaAsset.updateMany({
-    where: { ownerUserId: user.id, publicId: { in: parsed.data.publicIds } },
+
+  const publicIds = [...new Set(parsed.data.publicIds)];
+  if (publicIds.length !== parsed.data.publicIds.length) {
+    return NextResponse.json({ error: "Duplicate media references are not allowed." }, { status: 400 });
+  }
+
+  const assets = await prisma.mediaAsset.findMany({
+    where: { ownerUserId: user.id, publicId: { in: publicIds }, resourceType: { in: ["image", "video", "raw"] } },
+    select: { id: true, publicId: true, linkedAt: true },
+  });
+  if (assets.length !== publicIds.length) {
+    return NextResponse.json({ error: "One or more assets are not owned by this account or were not verified." }, { status: 403 });
+  }
+
+  const alreadyLinked = assets.filter((asset) => asset.linkedAt !== null);
+  if (alreadyLinked.length) {
+    return NextResponse.json({ error: "One or more assets have already been attached." }, { status: 409 });
+  }
+
+  const updated = await prisma.mediaAsset.updateMany({
+    where: { ownerUserId: user.id, publicId: { in: publicIds }, linkedAt: null },
     data: { linkedAt: new Date() },
   });
-  if (result.count !== parsed.data.publicIds.length) return NextResponse.json({ error: "One or more assets are not owned by this account or were not verified." }, { status: 403 });
-  return NextResponse.json({ ok: true, linked: result.count });
+  if (updated.count !== publicIds.length) {
+    return NextResponse.json({ error: "Media references changed during attachment. Refresh and retry." }, { status: 409 });
+  }
+  return NextResponse.json({ ok: true, linked: updated.count });
 }
