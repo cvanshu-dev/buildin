@@ -281,7 +281,11 @@ export function ProfileWorkspace({
   }
 
   async function removePortfolio(id: string) {
-    setBusy(true);\n    try { const response = await fetch(`/api/portfolio?id=${encodeURIComponent(id)}`, { method: "DELETE" }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to delete portfolio item."); setMessage("Portfolio item removed."); await load(); } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to delete portfolio item."); } finally { setBusy(false); }\n  }\n\n  // Add social account.
+    setBusy(true);
+    try { const response = await fetch(`/api/portfolio?id=${encodeURIComponent(id)}`, { method: "DELETE" }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "Unable to delete portfolio item."); setMessage("Portfolio item removed."); await load(); } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to delete portfolio item."); } finally { setBusy(false); }
+  }
+
+  // Add social account.
   async function addSocial() {
     setBusy(true);
     setMessage("");
