@@ -13,7 +13,7 @@ type Asset = {
 };
 
 export function MediaUploader({
-  context, collaborationId, campaignId, accept, maxSizeMb, multiple = false, onUpload,
+  context, collaborationId, campaignId, accept, maxSizeMb, multiple = false, maxFiles = 10, onUpload,
 }: {
   context: UploadContext;
   collaborationId?: string;
@@ -21,6 +21,7 @@ export function MediaUploader({
   accept: string;
   maxSizeMb: number;
   multiple?: boolean;
+  maxFiles?: number;
   onUpload: (asset: Asset) => void | Promise<void>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,6 +36,7 @@ export function MediaUploader({
     setDone("");
     const selected = Array.from(files);
     if (!multiple && selected.length > 1) { setError("Upload one file at a time."); return; }
+    if (selected.length > maxFiles) { setError(`Select no more than ${maxFiles} files at once.`); return; }
     if (selected.some((file) => file.size > maxSizeMb * 1024 * 1024)) {
       setError(`Each file must be smaller than ${maxSizeMb} MB.`);
       return;
