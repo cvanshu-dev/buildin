@@ -1,4 +1,4 @@
-import { notFound,redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { CreatorCollaborationWorkspace } from "@/components/creator-collaboration-workspace";
