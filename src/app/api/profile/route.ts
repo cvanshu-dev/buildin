@@ -155,9 +155,25 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (parsed.data.logoPublicId && (!parsed.data.logoUrl || !parsed.data.logoPublicId.startsWith(`buildin/brands/${membership.brandId}/logo/`))) return NextResponse.json({ error: "Invalid brand logo media reference." }, { status: 400 });
+    if (parsed.data.logoPublicId) {
+      let matchesCloudinaryAsset = false;
+      try {
+        const logoUrl = new URL(parsed.data.logoUrl ?? "");
+        const path = decodeURIComponent(logoUrl.pathname);
+        const uploadIndex = path.indexOf("/upload/");
+        matchesCloudinaryAsset =
+          logoUrl.protocol === "https:" &&
+          logoUrl.hostname === "res.cloudinary.com" &&
+          uploadIndex >= 0 &&
+          path.slice(uploadIndex + "/upload/".length).includes(parsed.data.logoPublicId) &&
+          parsed.data.logoPublicId.startsWith(`buildin/brands/${membership.brandId}/logo/`);
+      } catch {
+        matchesCloudinaryAsset = false;
+      }
+      if (!matchesCloudinaryAsset) return NextResponse.json({ error: "Brand logo URL does not match your verified Cloudinary upload." }, { status: 400 });
+    }
     const verifiedLogo = parsed.data.logoPublicId ? await prisma.mediaAsset.findFirst({
-      where: { ownerUserId: user.id, publicId: parsed.data.logoPublicId, context: "brand-logo", resourceType: "image", secureUrl: parsed.data.logoUrl!, linkedAt: null },
+      where: { ownerUserId: user.id, publicId: parsed.data.logoPublicId, context: "brand-logo", resourceType: "image", linkedAt: null },
       select: { id: true },
     }) : null;
     if (parsed.data.logoPublicId && !verifiedLogo) return NextResponse.json({ error: "Brand logo upload is not verified, already attached, or not owned by this account." }, { status: 403 });
