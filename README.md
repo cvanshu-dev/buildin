@@ -15,7 +15,7 @@ Public account types are **BRAND** and **CREATOR**. Modelling, UGC and other dis
 1. Use Node.js 20.9+.
 2. Install packages: `npm install`.
 3. Copy environment template: `cp .env.example .env`.
-4. Configure `DATABASE_URL`, `BETTER_AUTH_URL` and a strong `BETTER_AUTH_SECRET`.
+4. Configure `DATABASE_URL`, `DIRECT_URL` (the direct, non-pooled PostgreSQL URL for Prisma migrations), `BETTER_AUTH_URL` and a strong `BETTER_AUTH_SECRET`.
 5. Configure Resend using `RESEND_API_KEY`, `RESEND_FROM_EMAIL` and `CONTACT_EMAIL`.
 6. Run `npx prisma generate`.
 7. Apply migrations: `npx prisma migrate dev`.
