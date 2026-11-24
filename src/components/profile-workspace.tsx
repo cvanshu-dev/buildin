@@ -15,6 +15,11 @@ type SocialAccount = {
   id: string;
   platform: string;
   handle: string;
+  profileUrl?: string;
+  followers?: number | null;
+  source?: string;
+  profilePictureUrl?: string | null;
+  tokenExpiresAt?: string | null;
 };
 
 type VerificationItem = {
