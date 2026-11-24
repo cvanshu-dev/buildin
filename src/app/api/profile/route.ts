@@ -44,7 +44,7 @@ export async function GET() {
       where: { userId: user.id },
       include: {
         portfolioItems: { orderBy: { sortOrder: "asc" } },
-        socialAccounts: { include: { socialAccountMetricSnapshots: { orderBy: { recordedAt: "desc" }, take: 1 } } },
+        socialAccounts: true,
         user: { select: { image: true } },
       },
     });
