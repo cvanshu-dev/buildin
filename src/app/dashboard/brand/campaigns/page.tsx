@@ -115,7 +115,7 @@ export default function BrandCampaigns() {
         {selectedCampaignId && (
           <div className="mt-5 rounded-xl border border-slate-200 p-4">
             <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Campaign brief files</h3><button type="button" onClick={() => { setSelectedCampaignId(""); setAttachments([]); }} className="text-xs text-slate-500 underline">Close</button></div>
-            <div className="mt-3"><MediaUploader context="campaign-brief" campaignId={selectedCampaignId} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,image/jpeg,image/png,image/webp" maxSizeMb={25} multiple onUpload={addAttachment} /></div>
+            <div className="mt-3"><MediaUploader context="campaign-brief" campaignId={selectedCampaignId} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,image/jpeg,image/png,image/webp" maxSizeMb={25} multiple maxFiles={20} onUpload={addAttachment} /></div>
             <ul className="mt-4 space-y-2">
               {attachments.map((attachment) => <li key={attachment.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm"><a href={attachment.url} target="_blank" rel="noreferrer" className="min-w-0 truncate text-blue-700 underline">{attachment.fileName}</a><button type="button" onClick={() => void removeAttachment(attachment.id)} className="shrink-0 text-xs text-red-600">Remove</button></li>)}
               {attachments.length === 0 && <li className="text-xs text-slate-500">No brief files uploaded yet.</li>}
