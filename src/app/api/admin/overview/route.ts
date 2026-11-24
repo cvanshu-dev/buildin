@@ -48,7 +48,7 @@ export async function GET() {
     recentCollaborations,
     recentAudit: ["ADMIN", "SUPER_ADMIN"].includes(user.role) ? recentAudit : [],
     permissions: {
-      canManageUsers: user.role === "SUPER_ADMIN",
+      canManageUsers: ["ADMIN", "SUPER_ADMIN"].includes(user.role),
       canManageCampaigns: ["ADMIN", "SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role),
       canReviewVerification: ["ADMIN", "SUPER_ADMIN"].includes(user.role),
       canViewAudit: ["ADMIN", "SUPER_ADMIN"].includes(user.role),
