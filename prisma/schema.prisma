@@ -139,6 +139,8 @@ model PortfolioItem {
   description      String?
   mediaUrl         String
   mediaType        String         @default("IMAGE")
+  publicId         String?
+  resourceType     String?
   sortOrder        Int            @default(0)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
