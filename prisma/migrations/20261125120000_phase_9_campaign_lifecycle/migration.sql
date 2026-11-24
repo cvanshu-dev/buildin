@@ -2,6 +2,7 @@
 -- Keep existing milestone rows and the original creator/completion audit fields.
 ALTER TABLE "CollaborationMilestone" ALTER COLUMN "status" DROP DEFAULT;
 ALTER TABLE "CollaborationMilestone" ALTER COLUMN "status" TYPE TEXT USING "status"::text;
+UPDATE "CollaborationMilestone" SET "status" = 'APPROVED' WHERE "status" = 'COMPLETED';
 ALTER TABLE "CollaborationMilestone" ALTER COLUMN "status" SET DEFAULT 'PENDING';
 ALTER TABLE "CollaborationMilestone"
   ADD COLUMN "sortOrder" INTEGER NOT NULL DEFAULT 0,
