@@ -23,7 +23,7 @@ export function AdminTrustDashboard() {
     setReviewStats(data.reviewStats || {});
   }, []);
 
-  useEffect(() => { void load().catch(e => setMessage(e.message)); }, [load]);
+  useEffect(() => { void load().catch(error => setMessage(error instanceof Error ? error.message : "Could not load trust operations.")); }, [load]);
 
   async function act(body: Row, success: string) {
     setBusy(body.id); setMessage("");
