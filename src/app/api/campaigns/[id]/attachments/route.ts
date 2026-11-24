@@ -47,6 +47,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const count = await prisma.campaignBriefAttachment.count({ where: { campaignId: id } });
   if (count >= 20) return NextResponse.json({ error: "A campaign can have at most 20 brief attachments." }, { status: 409 });
   const attachment = await prisma.campaignBriefAttachment.create({ data: { ...parsed.data, campaignId: id } });
+  await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: parsed.data.publicId }, data: { linkedAt: new Date() } });
   return NextResponse.json({ attachment }, { status: 201 });
 }
 
@@ -80,5 +81,6 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
     if (!response.ok || !["ok", "not found"].includes(result.result ?? "")) return NextResponse.json({ error: result.error?.message ?? "Cloudinary deletion failed." }, { status: 502 });
   }
   await prisma.campaignBriefAttachment.delete({ where: { id: attachment.id } });
+  if (attachment.publicId) await prisma.mediaAsset.deleteMany({ where: { ownerUserId: user.id, publicId: attachment.publicId } });
   return NextResponse.json({ ok: true });
 }
