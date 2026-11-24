@@ -236,7 +236,7 @@ model Collaboration {
   campaignId    String
   applicationId String   @unique
   creatorProfileId String
-  status        String   @default("ACTIVE")
+  status        String   @default("PENDING_START")
   agreedAmount  Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
