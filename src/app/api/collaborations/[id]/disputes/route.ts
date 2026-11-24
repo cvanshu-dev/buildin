@@ -47,9 +47,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     evidence: parsed.data.evidence?.length ? { create: parsed.data.evidence.map(e => ({ submittedById: user.id, kind: e.kind, label: e.label, content: e.content || null, url: e.url || null })) } : undefined,
   }, include: { openedBy: { select: { id: true, name: true, role: true } }, evidence: true } });
   const recipients = [...new Set([collaboration.creatorProfile.userId, ...collaboration.campaign.brand.members.map(m => m.userId)])].filter(x => x !== user.id);
+  const admins = await prisma.user.findMany({ where: { role: { in: ["ADMIN", "SUPER_ADMIN"] }, status: "ACTIVE" }, select: { id: true } });
   await prisma.$transaction([
     prisma.notification.createMany({ data: recipients.map(userId => ({ userId, type: "DISPUTE_OPENED", title: "Collaboration dispute opened", body: `A dispute was opened for ${collaboration.campaign.title}.`, href: userId === collaboration.creatorProfile.userId ? `/dashboard/creator/collaborations/${id}` : `/dashboard/brand/collaborations/${id}` })) }),
     prisma.auditLog.create({ data: { actorId: user.id, action: "DISPUTE_OPENED", entityType: "CollaborationDispute", entityId: dispute.id, metadata: { collaborationId: id, category: dispute.category } } }),
+    prisma.notification.createMany({ data: admins.map(admin => ({ userId: admin.id, type: "DISPUTE_OPENED", title: "New collaboration dispute", body: `A dispute was opened for ${collaboration.campaign.title}.`, href: "/dashboard/admin/trust" })) }),
   ]);
   return NextResponse.json({ dispute }, { status: 201 });
 }
