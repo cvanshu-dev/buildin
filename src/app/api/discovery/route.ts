@@ -41,6 +41,7 @@ export async function GET(request: Request) {
       take: pageSize,
       select: {
         id: true,
+        user: { select: { id: true } },
         displayName: true,
         bio: true,
         city: true,
@@ -60,8 +61,14 @@ export async function GET(request: Request) {
     }),
   ]);
 
+  const creatorUserIds = creators.map(creator => creator.user.id);
+  const ratings = creatorUserIds.length ? await prisma.review.groupBy({
+    by: ["targetUserId"], where: { targetUserId: { in: creatorUserIds }, status: "PUBLISHED" },
+    _avg: { rating: true }, _count: { _all: true },
+  }) : [];
+  const ratingByUser = new Map(ratings.map(item => [item.targetUserId, { rating: item._avg.rating ? Number(item._avg.rating.toFixed(1)) : null, reviewCount: item._count._all }]));
   return NextResponse.json({
-    creators,
+    creators: creators.map(({ user, ...creator }) => ({ ...creator, ...(ratingByUser.get(user.id) ?? { rating: null, reviewCount: 0 }) })),
     pagination: { page, pageSize, total, pages: Math.ceil(total / pageSize) },
   });
 }
