@@ -46,5 +46,6 @@ export async function DELETE(request: Request) {
   const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/${resourceType}/destroy`, { method: "POST", body: form, cache: "no-store" });
   const result = await response.json() as { result?: string; error?: { message?: string } };
   if (!response.ok || !["ok", "not found"].includes(result.result ?? "")) return NextResponse.json({ error: result.error?.message ?? "Cloudinary could not delete this asset." }, { status: 502 });
+  await prisma.mediaAsset.deleteMany({ where: { ownerUserId: user.id, publicId } });
   return NextResponse.json({ ok: true, result: result.result });
 }
