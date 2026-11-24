@@ -40,6 +40,8 @@ export async function POST(request: Request) {
       if (!campaignId) return NextResponse.json({ error: "Campaign ID is required." }, { status: 400 });
       const campaign = await prisma.campaign.findFirst({ where: { id: campaignId, brandId: owner.brandId }, select: { id: true } });
       if (!campaign) return NextResponse.json({ error: "Campaign not found." }, { status: 404 });
+      const attachmentCount = await prisma.campaignBriefAttachment.count({ where: { campaignId } });
+      if (attachmentCount >= 20) return NextResponse.json({ error: "A campaign can have at most 20 brief attachments." }, { status: 409 });
       folder = `buildin/brands/${owner.brandId}/campaigns/${campaignId}/brief`;
       maxBytes = 25 * 1024 * 1024;
       allowedFormats = "pdf,doc,docx,ppt,pptx,xls,xlsx,txt,csv,jpg,jpeg,png,webp";
