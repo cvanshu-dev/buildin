@@ -14,6 +14,7 @@ export default async function PublicCreatorProfilePage({
     where: { id, isPublic: true },
     select: {
       id: true,
+      userId: true,
       displayName: true,
       bio: true,
       city: true,
@@ -44,6 +45,10 @@ export default async function PublicCreatorProfilePage({
   });
 
   if (!profile) notFound();
+  const [reviews, ratingSummary] = await Promise.all([
+    prisma.review.findMany({ where: { targetUserId: profile.userId, status: "PUBLISHED" }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, rating: true, title: true, comment: true, createdAt: true, reviewer: { select: { name: true } }, collaboration: { select: { campaign: { select: { title: true } } } } } }),
+    prisma.review.aggregate({ where: { targetUserId: profile.userId, status: "PUBLISHED" }, _avg: { rating: true }, _count: { _all: true } }),
+  ]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-16 text-slate-900">
@@ -120,7 +125,7 @@ export default async function PublicCreatorProfilePage({
             </div>
           </section>
         )}
-        {profile.socialAccounts.length > 0 && (
+        <section className="mt-12">\n          <h2 className="text-xl font-semibold">Reviews from brands</h2>\n          <div className="mt-4 space-y-3">{reviews.length ? reviews.map(review => <article key={review.id} className="rounded-2xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{review.reviewer.name}</p><p className="text-amber-500">{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5-review.rating)}</span></p></div>{review.title && <h3 className="mt-2 font-semibold">{review.title}</h3>}<p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{review.comment}</p><p className="mt-3 text-xs text-slate-500">Campaign: {review.collaboration.campaign.title} · {new Date(review.createdAt).toLocaleDateString("en-IN")}</p></article>) : <p className="rounded-xl border border-dashed border-slate-200 p-5 text-sm text-slate-500">Completed collaboration reviews will appear here.</p>}</div>\n        </section>\n        {profile.socialAccounts.length > 0 && (
           <section className="mt-12">
             <h2 className="text-xl font-semibold">Social accounts</h2>
             <div className="mt-4 flex flex-wrap gap-3">
