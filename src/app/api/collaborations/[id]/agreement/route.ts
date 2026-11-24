@@ -178,7 +178,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (brandMemberIds.length > 0) {
       const title = action === "ACCEPT" ? "Agreement accepted" : action === "DECLINE" ? "Agreement declined" : "Changes requested on agreement";
       const body = action === "REQUEST_CHANGES" ? (note || "The creator requested changes to the agreement.") : action === "ACCEPT" ? `The creator accepted the agreement for ${collab.campaign.title}.` : `The creator declined the agreement for ${collab.campaign.title}.`;
-      await tx.notification.create({
+      await tx.notification.createMany({
         data: brandMemberIds.map((userId) => ({ userId, type: `AGREEMENT_${action}`, title, body, href: `/dashboard/brand/collaborations/${id}` })),
       });
     }
