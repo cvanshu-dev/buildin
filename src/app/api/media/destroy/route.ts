@@ -30,6 +30,13 @@ export async function DELETE(request: Request) {
     prefixes.push(...collaborations.map((item) => `buildin/collaborations/${item.id}/`));
   }
   if (!prefixes.some((prefix) => publicId.startsWith(prefix))) return NextResponse.json({ error: "You do not own this media asset." }, { status: 403 });
+  const tracked = await prisma.mediaAsset.findUnique({ where: { publicId }, select: { ownerUserId: true, resourceType: true, linkedAt: true } });
+  if (!tracked || tracked.ownerUserId !== user.id || tracked.resourceType !== resourceType) {
+    return NextResponse.json({ error: "Only verified media uploaded by this account can be deleted." }, { status: 403 });
+  }
+  if (tracked.linkedAt) {
+    return NextResponse.json({ error: "This file is attached to active profile or campaign content. Remove it from that content first." }, { status: 409 });
+  }
 
   const cloud = process.env.CLOUDINARY_CLOUD_NAME;
   const key = process.env.CLOUDINARY_API_KEY;
