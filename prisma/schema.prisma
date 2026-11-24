@@ -156,6 +156,7 @@ model SocialAccount {
   handle                       String
   profileUrl                   String
   followers                    Int?
+  following                    Int?
   createdAt                    DateTime                      @default(now())
   updatedAt                    DateTime                      @updatedAt
   creatorProfile               CreatorProfile                @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
@@ -187,6 +188,9 @@ model SocialAccountMetricSnapshot {
   id              String @id @default(cuid())
   socialAccountId String
   followers       Int
+  followingCount  Int?
+  postsAnalyzed   Int      @default(0)
+  recentPosts     Json?
   averageLikes    Int?
   averageComments Int?
   averageViews    Int?
