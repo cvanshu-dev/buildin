@@ -2,6 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { MediaUploader } from "@/components/media-uploader";
 
 type PortfolioItem = {
   id: string;
@@ -27,6 +28,8 @@ type ProfileData = {
   id?: string;
   name?: string;
   displayName?: string;
+  logoUrl?: string | null;
+  user?: { image: string | null };
   bio?: string | null;
   city?: string | null;
   state?: string | null;
@@ -370,6 +373,24 @@ export function ProfileWorkspace({
 
   return (
     <div className="mt-8 space-y-6">
+      <section className={panel}>
+        <h2 className="mb-2 text-lg font-semibold">{type === "CREATOR" ? "Profile picture" : "Brand logo"}</h2>
+        <p className="mb-4 text-sm text-slate-600">Upload a clear image. Instagram profile synchronization will be added with the official Meta integration.</p>
+        <div className="flex flex-wrap items-center gap-4">
+          {(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ? <img src={(type === "CREATOR" ? profile.user?.image : profile.logoUrl) ?? ""} alt="Profile" className="h-20 w-20 rounded-full border border-slate-200 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-500">{(profile.displayName ?? profile.name ?? "B").slice(0,1).toUpperCase()}</div>}
+          <MediaUploader context={type === "CREATOR" ? "avatar" : "brand-logo"} accept="image/jpeg,image/png,image/webp" maxSizeMb={8} onUpload={async (asset) => {
+            if (type === "CREATOR") {
+              const response = await fetch("/api/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: asset.secure_url }) });
+              const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not save profile picture.");
+            } else {
+              const response = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, logoUrl: asset.secure_url }) });
+              const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not save brand logo.");
+            }
+            await load();
+          }} />
+        </div>
+      </section>
+
       {/* Profile details */}
       <section className={panel}>
         <h2 className="mb-5 text-lg font-semibold">
@@ -419,10 +440,7 @@ export function ProfileWorkspace({
           <section className={panel}>
             <h2 className="font-semibold">Portfolio</h2>
 
-            <p className="mt-1 text-xs text-slate-600">
-              Provide a hosted media URL. Direct uploads are not
-              enabled yet.
-            </p>
+            <p className="mt-1 text-xs text-slate-600">Upload images or videos directly to your portfolio, or paste a hosted media URL.</p>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <input
@@ -434,18 +452,12 @@ export function ProfileWorkspace({
                 }
               />
 
-              <input
-                className="rounded-xl bg-slate-50 p-3"
-                placeholder="Public media URL"
-                value={url}
-                onChange={(event) =>
-                  setUrl(event.target.value)
-                }
-              />
+              <input className="rounded-xl bg-slate-50 p-3" placeholder="Public media URL (optional if uploaded)" value={url} onChange={(event) => setUrl(event.target.value)} />
+              <div className="md:col-span-2"><MediaUploader context="portfolio" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" maxSizeMb={100} onUpload={(asset) => setUrl(asset.secure_url)} /></div>
             </div>
 
             <button
-              disabled={busy}
+              disabled={busy || !title.trim() || !url.trim()}
               onClick={addPortfolio}
               className="mt-3 rounded-full border border-white/20 px-5 py-2 text-sm disabled:opacity-50"
             >
