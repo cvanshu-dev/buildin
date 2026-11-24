@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
+import { findOwnedVerifiedMedia, isCloudinarySecureUrl } from "@/lib/media-assets";
 
 export const runtime = "nodejs";
 const createSchema = z.object({
@@ -39,15 +40,34 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!campaign) return NextResponse.json({ error: "Campaign not found." }, { status: 404 });
   const parsed = createSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid attachment." }, { status: 400 });
-  const url = new URL(parsed.data.url);
   const expectedPrefix = `buildin/brands/${campaign.brandId}/campaigns/${id}/brief/`;
-  if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || !parsed.data.publicId.startsWith(expectedPrefix)) {
-    return NextResponse.json({ error: "Attachment must be an asset uploaded to this campaign's brief folder." }, { status: 400 });
+  if (!isCloudinarySecureUrl(parsed.data.url)) {
+    return NextResponse.json({ error: "Attachment must use a verified Cloudinary upload." }, { status: 400 });
+  }
+  const asset = await findOwnedVerifiedMedia({
+    ownerUserId: user.id,
+    publicId: parsed.data.publicId,
+    context: "campaign-brief",
+    expectedPrefix,
+  });
+  if (!asset || asset.resourceType !== parsed.data.resourceType || asset.bytes !== parsed.data.bytes) {
+    return NextResponse.json({ error: "This upload is not verified, does not belong to this campaign, or its metadata does not match." }, { status: 403 });
   }
   const count = await prisma.campaignBriefAttachment.count({ where: { campaignId: id } });
   if (count >= 20) return NextResponse.json({ error: "A campaign can have at most 20 brief attachments." }, { status: 409 });
-  const attachment = await prisma.campaignBriefAttachment.create({ data: { ...parsed.data, campaignId: id } });
-  await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: parsed.data.publicId }, data: { linkedAt: new Date() } });
+  const attachment = await prisma.$transaction(async (tx) => {
+    const created = await tx.campaignBriefAttachment.create({ data: { ...parsed.data, campaignId: id } });
+    const linked = await tx.mediaAsset.updateMany({
+      where: { ownerUserId: user.id, publicId: parsed.data.publicId, linkedAt: null },
+      data: { linkedAt: new Date() },
+    });
+    if (linked.count !== 1) throw new Error("MEDIA_LINK_CONFLICT");
+    return created;
+  }).catch((error: unknown) => {
+    if (error instanceof Error && error.message === "MEDIA_LINK_CONFLICT") return null;
+    throw error;
+  });
+  if (!attachment) return NextResponse.json({ error: "This upload has already been attached or is no longer available. Upload it again." }, { status: 409 });
   return NextResponse.json({ attachment }, { status: 201 });
 }
 
