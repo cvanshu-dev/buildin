@@ -1,0 +1,6 @@
+import {NextResponse} from "next/server";
+import {z} from "zod";
+import {getCurrentUser} from "@/lib/current-user";
+import {prisma} from "@/lib/prisma";
+const schema=z.object({image:z.string().url().max(2048)});
+export async function PATCH(request:Request){const user=await getCurrentUser();if(!user)return NextResponse.json({error:"Unauthorized"},{status:401});if(user.role!=="CREATOR")return NextResponse.json({error:"Creator account required."},{status:403});const parsed=schema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"A valid profile image URL is required."},{status:400});const url=new URL(parsed.data.image);if(url.protocol!=="https:"||url.hostname!=="res.cloudinary.com"||!url.pathname.includes(`/buildin/creators/${user.id}/avatar/`))return NextResponse.json({error:"Profile pictures must be uploaded to your own Cloudinary avatar folder."},{status:400});const updated=await prisma.user.update({where:{id:user.id},data:{image:parsed.data.image},select:{image:true}});return NextResponse.json({ok:true,image:updated.image});}

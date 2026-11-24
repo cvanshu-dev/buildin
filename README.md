@@ -63,3 +63,8 @@ Before public launch, still complete:
 - Verify Resend domain and sender configuration.
 
 Never collect government ID, bank data, or body measurements without a documented purpose, retention policy and access controls.
+
+
+## Phase 5 media uploads
+
+Buildin uses Cloudinary signed direct uploads. Configure server-only `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in local development and production. The API signs upload parameters after checking the authenticated user's role and ownership; the API secret is never exposed to the browser. Creator avatars and portfolio media, brand logos, campaign cover images, and creator deliverable submissions use separate folders. Current client limits are 8 MB for avatars/logos/campaign covers and 100 MB for portfolio/deliverables. Configure Cloudinary account-level upload limits as an additional safeguard. Apply the new migration with `npx prisma migrate deploy`, then run `npx prisma generate`.
