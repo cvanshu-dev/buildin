@@ -15,8 +15,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params;
   const collaboration = await participant(id, user.id);
   if (!collaboration) return NextResponse.json({ error: "Collaboration not found." }, { status: 404 });
-  const disputes = await prisma.collaborationDispute.findMany({ where: { collaborationId: id }, orderBy: { createdAt: "desc" }, include: { openedBy: { select: { id: true, name: true, role: true } }, resolver: { select: { name: true } }, evidence: { orderBy: { createdAt: "asc" }, include: { submittedBy: { select: { id: true, name: true } } } } } });
-  return NextResponse.json({ disputes });
+  const [disputes, sources] = await Promise.all([
+    prisma.collaborationDispute.findMany({ where: { collaborationId: id }, orderBy: { createdAt: "desc" }, include: { openedBy: { select: { id: true, name: true, role: true } }, resolver: { select: { name: true } }, evidence: { orderBy: { createdAt: "asc" }, include: { submittedBy: { select: { id: true, name: true } } } } } }),
+    prisma.collaboration.findUnique({ where: { id }, select: {
+      messages: { orderBy: { createdAt: "desc" }, take: 50, select: { id: true, body: true, createdAt: true } },
+      deliverables: { select: { id: true, title: true, assetUrl: true, submissions: { orderBy: { createdAt: "desc" }, select: { id: true, version: true, attachments: { select: { id: true, fileName: true, url: true } } } } } },
+      milestones: { select: { id: true, title: true, status: true } },
+    } }),
+  ]);
+  return NextResponse.json({ disputes, evidenceSources: sources });
 }
 
 const schema = z.object({
