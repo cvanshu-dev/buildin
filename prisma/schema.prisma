@@ -30,6 +30,7 @@ model User {
   auditEvents          AuditLog[]
   assignedCampaigns    Campaign[] @relation("CampaignManager")
   sentInvitations      CampaignInvitation[]
+  mediaAssets          MediaAsset[]
 }
 
 model Session {
@@ -436,4 +437,21 @@ model DeliverableSubmissionAttachment {
   createdAt    DateTime @default(now())
   submission   DeliverableSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   @@index([submissionId, createdAt])
+}
+
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  ownerUserId  String
+  publicId     String   @unique
+  resourceType String
+  secureUrl    String   @db.Text
+  context      String
+  bytes        Int
+  format       String
+  createdAt    DateTime @default(now())
+  linkedAt     DateTime?
+  owner        User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  @@index([linkedAt, createdAt])
+  @@index([ownerUserId, context])
 }
