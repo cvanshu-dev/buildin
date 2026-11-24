@@ -75,6 +75,7 @@ export function ProfileWorkspace({
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  const [portfolioMediaType, setPortfolioMediaType] = useState<"IMAGE" | "VIDEO">("IMAGE");
   const [platform, setPlatform] = useState("INSTAGRAM");
   const [handle, setHandle] = useState("");
 
@@ -237,7 +238,7 @@ export function ProfileWorkspace({
         body: JSON.stringify({
           title,
           mediaUrl: url,
-          mediaType: "IMAGE",
+          mediaType: portfolioMediaType,
         }),
       });
 
@@ -253,6 +254,7 @@ export function ProfileWorkspace({
 
       setTitle("");
       setUrl("");
+      setPortfolioMediaType("IMAGE");
       setMessage("Portfolio item added.");
 
       await load();
@@ -453,7 +455,7 @@ export function ProfileWorkspace({
               />
 
               <input className="rounded-xl bg-slate-50 p-3" placeholder="Public media URL (optional if uploaded)" value={url} onChange={(event) => setUrl(event.target.value)} />
-              <div className="md:col-span-2"><MediaUploader context="portfolio" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" maxSizeMb={100} onUpload={(asset) => setUrl(asset.secure_url)} /></div>
+              <div className="md:col-span-2"><MediaUploader context="portfolio" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" maxSizeMb={100} onUpload={(asset) => { setUrl(asset.secure_url); setPortfolioMediaType(asset.resource_type === "video" ? "VIDEO" : "IMAGE"); }} /></div>
             </div>
 
             <button
