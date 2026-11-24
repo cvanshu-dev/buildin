@@ -70,6 +70,19 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (action === "SUBMIT") {
     if (!isCreator) return NextResponse.json({ error: "Only the creator can submit work." }, { status: 403 });
     if (!assetUrl && !assets?.length) return NextResponse.json({ error: "Upload at least one deliverable file or provide a URL." }, { status: 400 });
+    if (assets?.length) {
+      const publicIds = assets.map((asset) => asset.publicId);
+      if (new Set(publicIds).size !== publicIds.length) return NextResponse.json({ error: "Duplicate deliverable attachments are not allowed." }, { status: 400 });
+      const verified = await prisma.mediaAsset.findMany({
+        where: { ownerUserId: user.id, publicId: { in: publicIds }, context: "deliverable", linkedAt: null },
+        select: { publicId: true, secureUrl: true, resourceType: true, bytes: true },
+      });
+      const verifiedById = new Map(verified.map((asset) => [asset.publicId, asset]));
+      if (verified.length !== assets.length || assets.some((asset) => {
+        const stored = verifiedById.get(asset.publicId);
+        return !stored || stored.secureUrl !== asset.url || stored.resourceType !== asset.resourceType || stored.bytes !== asset.bytes;
+      })) return NextResponse.json({ error: "One or more deliverable uploads are unverified, already attached, or not owned by this account." }, { status: 403 });
+    }
     if (assets?.some((asset) => {
       const url = new URL(asset.url);
       return url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || !asset.publicId.startsWith(`buildin/collaborations/${id}/deliverables/`);
@@ -93,7 +106,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         await tx.deliverableSubmission.create({
           data: { deliverableId: item.id, version, assetUrl: submittedUrl, note: submissionNote ?? null, submittedById: user.id, attachments: assets?.length ? { create: assets.map((asset) => ({ fileName: asset.fileName, url: asset.url, publicId: asset.publicId, resourceType: asset.resourceType, bytes: asset.bytes })) } : undefined },
         });
-        if (assets?.length) await tx.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: { in: assets.map((asset) => asset.publicId) } }, data: { linkedAt: new Date() } });
+        if (assets?.length) {
+          const linked = await tx.mediaAsset.updateMany({
+            where: { ownerUserId: user.id, publicId: { in: assets.map((asset) => asset.publicId) }, context: "deliverable", linkedAt: null },
+            data: { linkedAt: new Date() },
+          });
+          if (linked.count !== assets.length) throw new Error("MEDIA_ALREADY_LINKED");
+        }
         for (const member of collab.campaign.brand.members) {
           await tx.notification.create({ data: { userId: member.userId, type: "DELIVERABLE_SUBMITTED", title: "Creator submitted work", body: `${user.name} submitted "${item.title}" for ${collab.campaign.title}.`, href: "/dashboard/brand" } });
         }
