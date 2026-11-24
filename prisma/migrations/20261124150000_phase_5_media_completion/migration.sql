@@ -7,6 +7,9 @@ ALTER TABLE "SocialAccount"
 
 CREATE UNIQUE INDEX "SocialAccount_instagramUserId_key" ON "SocialAccount"("instagramUserId");
 
+ALTER TABLE "PortfolioItem" ADD COLUMN "publicId" TEXT;
+ALTER TABLE "PortfolioItem" ADD COLUMN "resourceType" TEXT;
+
 CREATE TABLE "CampaignBriefAttachment" (
   "id" TEXT NOT NULL,
   "campaignId" TEXT NOT NULL,
