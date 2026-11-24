@@ -79,7 +79,7 @@ Creators enter their public Instagram username in their Buildin profile. They ne
 
 ### Database migration
 
-Apply committed migrations with `npx prisma migrate deploy`, then run `npx prisma generate`. The Phase 5 completion migration adds encrypted Instagram connection metadata, campaign brief attachment records, and per-submission deliverable attachment records.
+Apply committed migrations with `npx prisma migrate deploy`, then run `npx prisma generate`. The Phase 5 migrations add campaign brief attachment records and per-submission deliverable attachment records. A later cleanup migration removes the unused platform Instagram OAuth connection and token columns.
 
 ### Media deletion
 
