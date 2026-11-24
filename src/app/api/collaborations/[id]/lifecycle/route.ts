@@ -57,7 +57,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const milestone = await prisma.$transaction(async tx => {
     const item = await tx.collaborationMilestone.create({ data: {
       collaborationId: id, title: parsed.data.title, description: parsed.data.description,
-      dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null, sortOrder: count,
+      dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null, sortOrder: count, createdById: user.id,
     }});
     await tx.collaborationEvent.create({ data: { collaborationId: id, actorId: user.id, action: "MILESTONE_CREATED", message: item.title } });
     await tx.notification.create({ data: {
