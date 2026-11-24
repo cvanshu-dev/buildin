@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type Row = Record<string, any>;
+// API responses are heterogeneous across dispute and report records.\n// eslint-disable-next-line @typescript-eslint/no-explicit-any\ntype Row = Record<string, any>;
 const pretty = (s: string) => s.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, x => x.toUpperCase());
 const input = "w-full rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-sm text-white placeholder:text-white/35";
 
