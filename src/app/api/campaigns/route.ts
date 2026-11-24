@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
  title:z.string().trim().min(4).max(120), brief:z.string().trim().min(30).max(5000),
+ coverImageUrl:z.string().url().max(2048).nullable().optional(),
  objectives:z.array(z.string().trim().min(2).max(100)).max(10).default([]),
  categories:z.array(z.string().trim().min(1).max(50)).min(1).max(12),
  platforms:z.array(z.string().trim().min(1).max(30)).max(8).default([]),
