@@ -22,18 +22,28 @@ export async function GET(request: Request) {
     const timestamp = String(Math.floor(Date.now() / 1000));
     const params = { public_id: asset.publicId, timestamp };
     const signature = createHash("sha1").update(Object.keys(params).sort().map((name) => `${name}=${params[name as keyof typeof params]}`).join("&") + apiSecret).digest("hex");
-    const form = new FormData();
-    form.set("public_id", asset.publicId);
-    form.set("timestamp", timestamp);
-    form.set("api_key", key);
-    form.set("signature", signature);
-    try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/${asset.resourceType}/destroy`, { method: "POST", body: form, cache: "no-store" });
-      const result = await response.json() as { result?: string };
-      if (!response.ok || !["ok", "not found"].includes(result.result ?? "")) { failed += 1; continue; }
-      await prisma.mediaAsset.delete({ where: { id: asset.id } });
-      deleted += 1;
-    } catch { failed += 1; }
+    const resourceTypes = asset.resourceType === "auto" ? ["image", "video", "raw"] : [asset.resourceType];
+    let removed = false;
+    let hadRequestError = false;
+    for (const resourceType of resourceTypes) {
+      const form = new FormData();
+      form.set("public_id", asset.publicId);
+      form.set("timestamp", timestamp);
+      form.set("api_key", key);
+      form.set("signature", signature);
+      try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/${resourceType}/destroy`, { method: "POST", body: form, cache: "no-store" });
+        const result = await response.json() as { result?: string };
+        if (!response.ok) { hadRequestError = true; break; }
+        if (result.result === "ok") { removed = true; break; }
+        if (result.result !== "not found") { hadRequestError = true; break; }
+      } catch { hadRequestError = true; break; }
+    }
+    if (hadRequestError) { failed += 1; continue; }
+    // "not found" across all resource types means the upload was never completed or was already removed.
+    await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    deleted += 1;
+    void removed;
   }
   return NextResponse.json({ scanned: orphaned.length, deleted, failed, cutoff: cutoff.toISOString() });
 }
