@@ -7,7 +7,7 @@ type Tab = "Overview" | "Users" | "Campaigns" | "Applications" | "Verifications"
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
 type Overview = {
-  metrics: { users: number; brands: number; creators: number; pendingVerifications: number; committedAmount: number };
+  metrics: { users: number; activeUsers: number; suspendedUsers: number; brands: number; creators: number; pendingVerifications: number; pendingDisputes: number; pendingReviewReports: number; committedAmount: number };
   campaignCounts: Record<string, number>; applicationCounts: Record<string, number>;
   collaborationCounts: Record<string, number>; deliverableCounts: Record<string, number>;
   recentUsers: Row[]; recentCampaigns: Row[]; recentCollaborations: Row[]; recentAudit: Row[];
@@ -135,13 +135,16 @@ export function AdminDashboard({ role, name }: { role: string; name: string }) {
     {loading && <p className="py-5 text-sm text-slate-500">Loading {tab.toLowerCase()}…</p>}
 
     {tab === "Overview" && overview && <section className="mt-6 space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           ["Accounts", overview.metrics.users, `${overview.metrics.brands} brands · ${overview.metrics.creators} creators`],
           ["Pending verification", overview.metrics.pendingVerifications, "Awaiting review"],
           ["Campaigns", Object.values(overview.campaignCounts).reduce((a,b)=>a+b,0), `${overview.campaignCounts.PUBLISHED ?? 0} published`],
           ["Collaborations", Object.values(overview.collaborationCounts).reduce((a,b)=>a+b,0), `${overview.collaborationCounts.ACTIVE ?? 0} active`],
           ["Committed value", money(overview.metrics.committedAmount), "Agreed amounts, not cash received or paid"],
+          ["Active accounts", overview.metrics.activeUsers, "Accounts currently enabled"],
+          ["Suspended accounts", overview.metrics.suspendedUsers, "Accounts blocked from access"],
+          ...(canAudit ? [["Open disputes", overview.metrics.pendingDisputes, "Open or under review"] as const, ["Pending review reports", overview.metrics.pendingReviewReports, "Reports awaiting moderation"] as const] : []),
         ].map(([label, value, sub]) => <div key={String(label)} className="rounded-2xl border border-slate-200 p-5"><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p><p className="mt-1 text-xs text-slate-500">{sub}</p></div>)}
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
