@@ -63,5 +63,6 @@ export async function POST(request: Request) {
   const timestamp = Math.floor(Date.now() / 1000);
   const publicId = randomUUID();
   const params = { timestamp: String(timestamp), folder, public_id: publicId, allowed_formats: allowedFormats };
+  await prisma.mediaAsset.create({ data: { ownerUserId: user.id, publicId, resourceType: "auto", secureUrl: "", context, bytes: 0, format: "pending" } });
   return NextResponse.json({ cloudName, apiKey, timestamp, folder, publicId, allowedFormats, maxBytes, signature: sign(params, apiSecret) });
 }
