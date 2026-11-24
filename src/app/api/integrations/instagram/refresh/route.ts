@@ -12,7 +12,7 @@ export async function POST() {
   const profile = await prisma.creatorProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
   const account = profile ? await prisma.socialAccount.findUnique({ where: { creatorProfileId_platform: { creatorProfileId: profile.id, platform: "INSTAGRAM" } } }) : null;
   if (!account?.accessTokenEncrypted || account.source !== "INSTAGRAM_OAUTH") return NextResponse.json({ error: "Instagram is not connected through Meta." }, { status: 404 });
-  if (account.tokenExpiresAt && account.tokenExpiresAt.getTime() < Date.now() + 86_400_000) return NextResponse.json({ error: "Instagram token is expired or too close to expiry. Reconnect Instagram." }, { status: 409 });
+  if (account.tokenExpiresAt && account.tokenExpiresAt.getTime() <= Date.now()) return NextResponse.json({ error: "Instagram token has expired. Reconnect Instagram." }, { status: 409 });
 
   try {
     const url = new URL("https://graph.instagram.com/refresh_access_token");
