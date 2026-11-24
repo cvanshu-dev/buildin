@@ -63,8 +63,13 @@ export async function POST(request: Request) {
   if (!cloudName || !apiKey || !apiSecret) return NextResponse.json({ error: "Cloudinary is not configured. Add server credentials." }, { status: 503 });
 
   const timestamp = Math.floor(Date.now() / 1000);
-  const publicId = randomUUID();
-  const params = { timestamp: String(timestamp), folder, public_id: publicId, allowed_formats: allowedFormats };
+  // Cloudinary returns the folder-qualified public ID when `folder` and a
+  // folder-relative `public_id` are uploaded together. Store that canonical
+  // ID from the start so verify, cleanup, and all attachment routes use the
+  // same identifier. Keep the UUID-only value for the signed upload form.
+  const uploadId = randomUUID();
+  const publicId = `${folder}/${uploadId}`;
+  const params = { timestamp: String(timestamp), folder, public_id: uploadId, allowed_formats: allowedFormats };
   await prisma.mediaAsset.create({ data: { ownerUserId: user.id, publicId, resourceType: "auto", secureUrl: "", context, bytes: 0, format: "pending" } });
-  return NextResponse.json({ cloudName, apiKey, timestamp, folder, publicId, allowedFormats, maxBytes, signature: sign(params, apiSecret) });
+  return NextResponse.json({ cloudName, apiKey, timestamp, folder, publicId: uploadId, allowedFormats, maxBytes, signature: sign(params, apiSecret) });
 }
