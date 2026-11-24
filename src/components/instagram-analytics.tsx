@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type Snapshot = {
-  followers: number; followingCount: number | null; averageLikes: number | null;
+  followers: number | null; followingCount: number | null; averageLikes: number | null;
   averageComments: number | null; averageViews: number | null; engagementRate: number | null;
   postsAnalyzed: number; source: string; recordedAt: string; recentPosts?: unknown;
 };
