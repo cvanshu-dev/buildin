@@ -160,25 +160,12 @@ model SocialAccount {
   updatedAt                    DateTime                      @updatedAt
   creatorProfile               CreatorProfile                @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
   socialAccountMetricSnapshots SocialAccountMetricSnapshot[]
-  instagramUserId       String?  @unique
-  accessTokenEncrypted  String?  @db.Text
-  tokenExpiresAt        DateTime?
   profilePictureUrl     String?
   source                String   @default("MANUAL")
   @@unique([creatorProfileId, platform])
   @@index([creatorProfileId])
 }
 
-model PlatformInstagramConnection {
-  id String @id @default("primary")
-  instagramUserId String
-  username String
-  accessTokenEncrypted String @db.Text
-  tokenExpiresAt DateTime?
-  connectedById String
-  connectedAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model VerificationRequest {
   id           String    @id @default(cuid())
