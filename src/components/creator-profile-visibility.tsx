@@ -135,13 +135,13 @@ export function CreatorProfileVisibility() {
             type="button"
             disabled={busy || (!profile.isPublic && !isComplete)}
             onClick={toggleVisibility}
-            className="rounded-full border border-lime-300/40 px-5 py-2 text-sm text-blue-700 disabled:opacity-50"
+            className="rounded-full border border-blue-200 px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50"
           >
             {busy ? "Saving…" : profile.isPublic ? "Make profile private" : isComplete ? "Make profile public" : "Complete profile to publish"}
           </button>
         </div>
         {!profile.isPublic && !isComplete && (
-          <p className="mt-3 text-xs text-amber-300">
+          <p className="mt-3 text-xs text-amber-700">
             Finish the remaining checklist items before publishing your profile.
           </p>
         )}
