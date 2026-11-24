@@ -73,11 +73,9 @@ Configure server-only `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDI
 
 Supported upload surfaces: creator avatars and portfolio media, brand logos, campaign covers, campaign brief attachments, and collaboration deliverables. Campaign briefs support up to 20 attachments, 25 MB each. Deliverable submissions support up to 10 attachments per version, 100 MB each. Avatars, logos, and campaign covers are limited to 8 MB.
 
-### Instagram creator analytics
+### Instagram creator profiles and manual review
 
-Creators submit a public Instagram username in their profile; they do not connect Instagram, share passwords, or authorize Buildin. An administrator connects Buildin's own eligible Instagram professional account once. During manual creator verification, staff can use Meta Business Discovery to retrieve available follower/following counts and recent media likes, comments, and Reel view counts. Meta only supports eligible public professional accounts; personal/consumer accounts, hidden metrics, unavailable media fields, and API permission/review restrictions are not bypassed. Reel view counts are returned only when Meta exposes `view_count`.
-
-Set `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_CONFIG_ID`, `INSTAGRAM_REDIRECT_URI`, and `INSTAGRAM_TOKEN_ENCRYPTION_KEY` (generate the encryption key with `openssl rand -base64 32`). Add the exact callback URL to the Meta app. Only Admin/Super Admin can connect the platform account.
+Creators enter their public Instagram username in their Buildin profile. They never connect Instagram, authorize Buildin, or share their password. Buildin does not connect a platform-owned Instagram account. Meta's official API does not provide reliable access to arbitrary public accounts by username, so automated follower/following and recent post/Reel analytics are not enabled in this build. Staff review the submitted profile and any supporting evidence manually. Do not treat self-reported metrics as verified.
 
 ### Database migration
 
