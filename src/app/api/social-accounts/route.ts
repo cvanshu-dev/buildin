@@ -22,7 +22,7 @@ export async function POST(request:Request) {
       where:{creatorProfileId_platform:{creatorProfileId:profile.id,platform:parsed.data.platform}},
       create:{...parsed.data,creatorProfileId:profile.id},
       update:{handle:parsed.data.handle,profileUrl:parsed.data.profileUrl,followers:parsed.data.followers??null},
-      select:{id:true,platform:true,handle:true,profileUrl:true,followers:true,source:true,profilePictureUrl:true,tokenExpiresAt:true},
+      select:{id:true,platform:true,handle:true,profileUrl:true,followers:true,source:true,profilePictureUrl:true},
     });
     return NextResponse.json({ok:true,account},{status:201});
   } catch { return NextResponse.json({error:"Unable to save social account."},{status:400}); }
