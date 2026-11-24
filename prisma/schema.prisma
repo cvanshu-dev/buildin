@@ -258,6 +258,8 @@ model Collaboration {
   events        CollaborationEvent[]
   @@index([creatorProfileId, status])
   @@index([campaignId, status])
+  reviews          Review[]
+  disputes         CollaborationDispute[]
 }
 
 
