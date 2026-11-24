@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
+import { findOwnedVerifiedMedia, isCloudinarySecureUrl } from "@/lib/media-assets";
 
 const schema = z.object({
  title:z.string().trim().min(4).max(120), brief:z.string().trim().min(30).max(5000),
  coverImageUrl:z.string().url().max(2048).nullable().optional(),
+ coverImagePublicId:z.string().min(1).max(240).optional(),
  objectives:z.array(z.string().trim().min(2).max(100)).max(10).default([]),
  categories:z.array(z.string().trim().min(1).max(50)).min(1).max(12),
  platforms:z.array(z.string().trim().min(1).max(30)).max(8).default([]),
@@ -38,6 +40,27 @@ export async function POST(request:Request){
  const owner=await prisma.brandMember.findFirst({where:{userId:user.id,title:"Owner"},select:{brandId:true}});
  if(!owner)return NextResponse.json({error:"Only the brand owner can create campaigns."},{status:403});
  const d=parsed.data;
- const campaign=await prisma.campaign.create({data:{...d,brandId:owner.brandId,applicationDeadline:d.applicationDeadline?new Date(d.applicationDeadline):null,startDate:d.startDate?new Date(d.startDate):null,endDate:d.endDate?new Date(d.endDate):null}});
+ if (d.coverImageUrl && isCloudinarySecureUrl(d.coverImageUrl)) {
+  if (!d.coverImagePublicId || !d.coverImagePublicId.startsWith(`buildin/brands/${owner.brandId}/campaign-covers/`)) {
+   return NextResponse.json({error:"Select a verified campaign cover upload."},{status:400});
+  }
+  const asset=await findOwnedVerifiedMedia({ownerUserId:user.id,publicId:d.coverImagePublicId,context:"campaign-cover",expectedPrefix:`buildin/brands/${owner.brandId}/campaign-covers/`});
+  if(!asset || asset.resourceType!=="image") return NextResponse.json({error:"Campaign cover upload is not verified or does not belong to your brand."},{status:403});
+ } else if (d.coverImagePublicId || d.coverImageUrl) {
+  return NextResponse.json({error:"Campaign covers must be uploaded and verified through Buildin."},{status:400});
+ }
+ const {coverImagePublicId,...campaignData}=d;
+ const campaign=await prisma.$transaction(async(tx)=>{
+  const created=await tx.campaign.create({data:{...campaignData,brandId:owner.brandId,applicationDeadline:d.applicationDeadline?new Date(d.applicationDeadline):null,startDate:d.startDate?new Date(d.startDate):null,endDate:d.endDate?new Date(d.endDate):null}});
+  if(coverImagePublicId){
+   const linked=await tx.mediaAsset.updateMany({where:{ownerUserId:user.id,publicId:coverImagePublicId,linkedAt:null},data:{linkedAt:new Date()}});
+   if(linked.count!==1) throw new Error("MEDIA_LINK_CONFLICT");
+  }
+  return created;
+ }).catch((error:unknown)=>{
+  if(error instanceof Error && error.message==="MEDIA_LINK_CONFLICT") return null;
+  throw error;
+ });
+ if(!campaign) return NextResponse.json({error:"This cover upload has already been used. Upload it again."},{status:409});
  return NextResponse.json({campaign},{status:201});
 }
