@@ -14,6 +14,7 @@ export function AdminTrustDashboard() {
   const [reviewStats, setReviewStats] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [notes, setNotes] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     const response = await fetch("/api/admin/trust", { cache: "no-store" });
