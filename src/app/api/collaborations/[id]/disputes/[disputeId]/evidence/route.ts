@@ -48,6 +48,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       url = row.url;
     }
   }
+  if (url && !url.startsWith("https://")) return NextResponse.json({ error: "Evidence files and links must use HTTPS." }, { status: 400 });
   const evidence = await prisma.disputeEvidence.create({ data: { disputeId, submittedById: user.id, kind: input.kind, label: input.label, content, url, referenceId: input.referenceId || null } });
   await prisma.auditLog.create({ data: { actorId: user.id, action: "DISPUTE_EVIDENCE_ADDED", entityType: "CollaborationDispute", entityId: disputeId, metadata: { collaborationId: id, evidenceId: evidence.id, kind: evidence.kind } } });
   return NextResponse.json({ evidence }, { status: 201 });
