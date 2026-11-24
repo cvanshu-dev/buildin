@@ -209,6 +209,7 @@ model Campaign {
   brandId        String
   title          String
   brief          String
+  coverImageUrl  String?
   objectives     String[]
   categories     String[]
   platforms      String[]
