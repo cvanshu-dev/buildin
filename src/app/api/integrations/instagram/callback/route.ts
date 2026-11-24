@@ -6,7 +6,7 @@ import { encryptInstagramToken } from "@/lib/instagram-token";
 export const runtime = "nodejs";
 
 type TokenResponse = { access_token?: string; user_id?: number | string; expires_in?: number; error_message?: string };
-type InstagramProfile = { id?: string; username?: string; name?: string; profile_picture_url?: string; followers_count?: number };
+type InstagramProfile = { id?: string; user_id?: string; username?: string; name?: string; profile_picture_url?: string; followers_count?: number };
 
 function returnToDashboard(request: NextRequest, status: string) {
   const url = new URL("/dashboard/creator/profile", request.url);
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     profileUrl.searchParams.set("access_token", longToken.access_token);
     const profileResponse = await fetch(profileUrl, { cache: "no-store" });
     const instagram = await profileResponse.json() as InstagramProfile & { error?: { message?: string } };
-    if (!profileResponse.ok || !instagram.username || !instagram.id) throw new Error(instagram.error?.message ?? "Unable to read Instagram profile.");
+    const instagramId = instagram.user_id ?? instagram.id;\n    if (!profileResponse.ok || !instagram.username || !instagramId) throw new Error(instagram.error?.message ?? "Unable to read Instagram profile.");
 
     const creator = await prisma.creatorProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
     if (!creator) throw new Error("Creator profile not found.");
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
           creatorProfileId: creator.id, platform: "INSTAGRAM", handle: instagram.username,
           profileUrl: `https://www.instagram.com/${instagram.username}/`,
           followers: typeof instagram.followers_count === "number" ? instagram.followers_count : null,
-          instagramUserId: instagram.id, accessTokenEncrypted: encryptInstagramToken(longToken.access_token),
+          instagramUserId: String(instagramId), accessTokenEncrypted: encryptInstagramToken(longToken.access_token),
           tokenExpiresAt: expiresAt, profilePictureUrl: instagram.profile_picture_url ?? null, source: "INSTAGRAM_OAUTH",
         },
         update: {
