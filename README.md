@@ -83,7 +83,9 @@ Apply committed migrations with `npx prisma migrate deploy`, then run `npx prism
 
 ### Media deletion
 
-The media destroy endpoint only accepts public IDs in the authenticated creator's or brand owner's Buildin folders (or that creator's own collaboration folders). Campaign brief attachment removal deletes the Cloudinary asset and its database record. Do not delete assets referenced by approved campaign or collaboration records without first updating those records.
+The media destroy endpoint only accepts public IDs in the authenticated creator's or brand owner's Buildin folders (or that creator's own collaboration folders). Verified uploads are tracked in the `MediaAsset` table. Assets are marked linked when saved to a profile, portfolio, campaign brief, or deliverable submission. Campaign brief attachment and portfolio item removal delete both the Cloudinary asset and its database record.
+
+Configure `CRON_SECRET` and schedule an authenticated GET request to `/api/media/cleanup` at least daily (for example, with Hostinger Cron Jobs). The endpoint removes verified uploads that remain unlinked for more than 24 hours, processing up to 100 assets per run. Keep the endpoint private and do not expose the cron secret in client code.
 
 ### Deployment checklist
 
