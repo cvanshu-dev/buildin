@@ -33,7 +33,7 @@ export default function BrandCampaigns() {
     event.preventDefault();
     setMessage("");
     const body = {
-      title: form.title, brief: form.brief, coverImageUrl: form.coverImageUrl || null,
+      title: form.title, brief: form.brief, coverImageUrl: form.coverImageUrl || null, coverImagePublicId: form.coverImagePublicId || undefined,
       categories: form.categories.split(",").map((value) => value.trim()).filter(Boolean),
       platforms: form.platforms.split(",").map((value) => value.trim()).filter(Boolean),
       budgetMin: form.budgetMin ? Number(form.budgetMin) : null,
@@ -44,7 +44,6 @@ export default function BrandCampaigns() {
     const data = await response.json();
     setMessage(response.ok ? "Draft campaign created." : data.error || "Unable to create campaign.");
     if (response.ok) {
-      if (form.coverImagePublicId) { const linked = await fetch("/api/media/attach", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ publicIds: [form.coverImagePublicId] }) }); if (!linked.ok) setMessage("Campaign saved, but cover media could not be linked for cleanup tracking."); }
       setForm({ title: "", brief: "", categories: "", platforms: "", budgetMin: "", budgetMax: "", slots: "1", coverImageUrl: "", coverImagePublicId: "" });
       if (data.campaign?.id) {
         setSelectedCampaignId(data.campaign.id);
