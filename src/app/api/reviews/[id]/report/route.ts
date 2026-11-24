@@ -19,7 +19,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (review.reviewerId === user.id) return NextResponse.json({ error: "You cannot report your own review." }, { status: 400 });
   try {
     const report = await prisma.reviewReport.create({ data: { reviewId: id, reporterId: user.id, reason: parsed.data.reason, details: parsed.data.details || null } });
-    await prisma.auditLog.create({ data: { actorId: user.id, action: "REVIEW_REPORTED", entityType: "ReviewReport", entityId: report.id, metadata: { reviewId: id, reason: report.reason } } });
+    const admins = await prisma.user.findMany({ where: { role: { in: ["ADMIN", "SUPER_ADMIN"] }, status: "ACTIVE" }, select: { id: true } });
+    await prisma.$transaction([
+      prisma.auditLog.create({ data: { actorId: user.id, action: "REVIEW_REPORTED", entityType: "ReviewReport", entityId: report.id, metadata: { reviewId: id, reason: report.reason } } }),
+      prisma.notification.createMany({ data: admins.map(admin => ({ userId: admin.id, type: "REVIEW_REPORTED", title: "Review reported", body: "A published collaboration review was reported and needs moderation.", href: "/dashboard/admin/trust" })) }),
+    ]);
     return NextResponse.json({ report }, { status: 201 });
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") return NextResponse.json({ error: "You have already reported this review." }, { status: 409 });
