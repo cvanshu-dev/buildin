@@ -19,7 +19,6 @@ type SocialAccount = {
   followers?: number | null;
   source?: string;
   profilePictureUrl?: string | null;
-  tokenExpiresAt?: string | null;
 };
 
 type VerificationItem = {
