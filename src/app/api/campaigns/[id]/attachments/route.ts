@@ -44,10 +44,26 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || !parsed.data.publicId.startsWith(expectedPrefix)) {
     return NextResponse.json({ error: "Attachment must be an asset uploaded to this campaign's brief folder." }, { status: 400 });
   }
+  const verified = await prisma.mediaAsset.findFirst({
+    where: { ownerUserId: user.id, publicId: parsed.data.publicId, context: "campaign-brief", resourceType: parsed.data.resourceType, secureUrl: parsed.data.url, bytes: parsed.data.bytes, linkedAt: null },
+    select: { id: true },
+  });
+  if (!verified) return NextResponse.json({ error: "This upload is not verified, already attached, or not owned by this account." }, { status: 403 });
   const count = await prisma.campaignBriefAttachment.count({ where: { campaignId: id } });
   if (count >= 20) return NextResponse.json({ error: "A campaign can have at most 20 brief attachments." }, { status: 409 });
-  const attachment = await prisma.campaignBriefAttachment.create({ data: { ...parsed.data, campaignId: id } });
-  await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: parsed.data.publicId }, data: { linkedAt: new Date() } });
+  const attachment = await prisma.$transaction(async (tx) => {
+    const created = await tx.campaignBriefAttachment.create({ data: { ...parsed.data, campaignId: id } });
+    const linked = await tx.mediaAsset.updateMany({
+      where: { ownerUserId: user.id, publicId: parsed.data.publicId, context: "campaign-brief", linkedAt: null },
+      data: { linkedAt: new Date() },
+    });
+    if (linked.count !== 1) throw new Error("MEDIA_ALREADY_LINKED");
+    return created;
+  }).catch((error) => {
+    if (error instanceof Error && error.message === "MEDIA_ALREADY_LINKED") return null;
+    throw error;
+  });
+  if (!attachment) return NextResponse.json({ error: "The upload was attached elsewhere. Refresh and try again." }, { status: 409 });
   return NextResponse.json({ attachment }, { status: 201 });
 }
 

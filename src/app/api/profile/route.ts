@@ -156,18 +156,32 @@ export async function PUT(request: Request) {
     }
 
     if (parsed.data.logoPublicId && (!parsed.data.logoUrl || !parsed.data.logoPublicId.startsWith(`buildin/brands/${membership.brandId}/logo/`))) return NextResponse.json({ error: "Invalid brand logo media reference." }, { status: 400 });
+    const verifiedLogo = parsed.data.logoPublicId ? await prisma.mediaAsset.findFirst({
+      where: { ownerUserId: user.id, publicId: parsed.data.logoPublicId, context: "brand-logo", resourceType: "image", secureUrl: parsed.data.logoUrl!, linkedAt: null },
+      select: { id: true },
+    }) : null;
+    if (parsed.data.logoPublicId && !verifiedLogo) return NextResponse.json({ error: "Brand logo upload is not verified, already attached, or not owned by this account." }, { status: 403 });
     const { logoPublicId, ...brandData } = parsed.data;
-    const profile = await prisma.brand.update({
-      where: { id: membership.brandId },
-      data: {
-        ...brandData,
-        ...(brandData.logoUrl !== undefined ? { logoUrl: brandData.logoUrl || null } : {}),
-        website: brandData.website || null,
-        contactEmail: brandData.contactEmail || null,
-      },
+    const profile = await prisma.$transaction(async (tx) => {
+      const updated = await tx.brand.update({
+        where: { id: membership.brandId },
+        data: {
+          ...brandData,
+          ...(brandData.logoUrl !== undefined ? { logoUrl: brandData.logoUrl || null } : {}),
+          website: brandData.website || null,
+          contactEmail: brandData.contactEmail || null,
+        },
+      });
+      if (logoPublicId && verifiedLogo) {
+        const linked = await tx.mediaAsset.updateMany({ where: { id: verifiedLogo.id, ownerUserId: user.id, linkedAt: null }, data: { linkedAt: new Date() } });
+        if (linked.count !== 1) throw new Error("MEDIA_ALREADY_LINKED");
+      }
+      return updated;
+    }).catch((error) => {
+      if (error instanceof Error && error.message === "MEDIA_ALREADY_LINKED") return null;
+      throw error;
     });
-    if (logoPublicId) await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: logoPublicId }, data: { linkedAt: new Date() } });
-
+    if (!profile) return NextResponse.json({ error: "Brand logo upload was already attached. Upload again." }, { status: 409 });
     return NextResponse.json({ ok: true, profile });
   }
 

@@ -20,11 +20,31 @@ export async function POST(request:Request) {
   if(!parsed.success) return NextResponse.json({error:parsed.error.issues[0]?.message ?? "Invalid item."},{status:400});
   const profile=await prisma.creatorProfile.findUnique({where:{userId:user.id},select:{id:true}});
   if(!profile) return NextResponse.json({error:"Creator profile not found."},{status:404});
-  if (parsed.data.publicId) { const mediaUrl = new URL(parsed.data.mediaUrl); if (mediaUrl.protocol !== "https:" || mediaUrl.hostname !== "res.cloudinary.com" || !parsed.data.publicId.startsWith(`buildin/creators/${user.id}/portfolio/`) || !parsed.data.resourceType) return NextResponse.json({error:"Uploaded portfolio media must belong to your creator folder."},{status:400}); }
+  if (parsed.data.publicId) {
+    const mediaUrl = new URL(parsed.data.mediaUrl);
+    if (mediaUrl.protocol !== "https:" || mediaUrl.hostname !== "res.cloudinary.com" ||
+        !parsed.data.publicId.startsWith(`buildin/creators/${user.id}/portfolio/`) || !parsed.data.resourceType) {
+      return NextResponse.json({ error: "Uploaded portfolio media must belong to your creator folder." }, { status: 400 });
+    }
+    const verified = await prisma.mediaAsset.findFirst({
+      where: { ownerUserId: user.id, publicId: parsed.data.publicId, context: "portfolio", resourceType: parsed.data.resourceType, secureUrl: parsed.data.mediaUrl, linkedAt: null },
+      select: { id: true },
+    });
+    if (!verified) return NextResponse.json({ error: "This upload is not verified, is already attached, or does not belong to your account." }, { status: 403 });
+  }
   const count=await prisma.portfolioItem.count({where:{creatorProfileId:profile.id}});
   if(count>=30) return NextResponse.json({error:"Portfolio limit is 30 items."},{status:400});
   const item=await prisma.portfolioItem.create({data:{...parsed.data,description:parsed.data.description||null,creatorProfileId:profile.id,sortOrder:count}});
-  if (parsed.data.publicId) await prisma.mediaAsset.updateMany({ where: { ownerUserId: user.id, publicId: parsed.data.publicId }, data: { linkedAt: new Date() } });
+  if (parsed.data.publicId) {
+    const linked = await prisma.mediaAsset.updateMany({
+      where: { ownerUserId: user.id, publicId: parsed.data.publicId, context: "portfolio", linkedAt: null },
+      data: { linkedAt: new Date() },
+    });
+    if (linked.count !== 1) {
+      await prisma.portfolioItem.delete({ where: { id: item.id } });
+      return NextResponse.json({ error: "The upload was attached elsewhere. Refresh and try again." }, { status: 409 });
+    }
+  }
   return NextResponse.json({ok:true,item},{status:201});
 }
 export async function DELETE(request:Request) {
