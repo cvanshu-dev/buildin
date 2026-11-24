@@ -483,20 +483,12 @@ export function ProfileWorkspace({
 
             <ul className="mt-4 space-y-2">
               {(profile.portfolioItems ?? []).map((item) => (
-                <li
-                  key={item.id}
-                  className="flex justify-between rounded-lg border border-slate-200 p-3 text-sm"
-                >
-                  {item.title}
-
-                  <a
-                    href={item.mediaUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-700"
-                  >
-                    Open
-                  </a>
+                <li key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+                  <span className="min-w-0 truncate">{item.title}</span>
+                  <div className="flex shrink-0 gap-3">
+                    <a href={item.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-700 underline">Open</a>
+                    <button type="button" disabled={busy} onClick={() => void removePortfolio(item.id)} className="text-red-600">Delete</button>
+                  </div>
                 </li>
               ))}
             </ul>
