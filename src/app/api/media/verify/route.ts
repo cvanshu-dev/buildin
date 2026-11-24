@@ -84,10 +84,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "The uploaded file failed server-side ownership, type, or size validation and was rejected." }, { status: 400 });
   }
 
+  const verifiedPublicId = asset.public_id!;
+  const verifiedResourceType = asset.resource_type!;
+  const verifiedSecureUrl = asset.secure_url!;
+  const verifiedBytes = asset.bytes!;
   await prisma.mediaAsset.upsert({
-    where: { publicId: asset.public_id },
-    create: { ownerUserId: user.id, publicId: asset.public_id, resourceType: asset.resource_type, secureUrl: asset.secure_url, context, bytes: asset.bytes, format: asset.format ?? "unknown" },
-    update: { ownerUserId: user.id, resourceType: asset.resource_type, secureUrl: asset.secure_url, context, bytes: asset.bytes, format: asset.format ?? "unknown", linkedAt: null },
+    where: { publicId: verifiedPublicId },
+    create: { ownerUserId: user.id, publicId: verifiedPublicId, resourceType: verifiedResourceType, secureUrl: verifiedSecureUrl, context, bytes: verifiedBytes, format: asset.format ?? "unknown" },
+    update: { ownerUserId: user.id, resourceType: verifiedResourceType, secureUrl: verifiedSecureUrl, context, bytes: verifiedBytes, format: asset.format ?? "unknown", linkedAt: null },
   });
-  return NextResponse.json({ ok: true, secureUrl: asset.secure_url, publicId: asset.public_id, bytes: asset.bytes, format: asset.format, resourceType: asset.resource_type });
+  return NextResponse.json({ ok: true, secureUrl: verifiedSecureUrl, publicId: verifiedPublicId, bytes: verifiedBytes, format: asset.format, resourceType: verifiedResourceType });
 }
