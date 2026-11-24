@@ -157,6 +157,11 @@ model SocialAccount {
   updatedAt                    DateTime                      @updatedAt
   creatorProfile               CreatorProfile                @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
   socialAccountMetricSnapshots SocialAccountMetricSnapshot[]
+  instagramUserId       String?  @unique
+  accessTokenEncrypted  String?  @db.Text
+  tokenExpiresAt        DateTime?
+  profilePictureUrl     String?
+  source                String   @default("MANUAL")
   @@unique([creatorProfileId, platform])
   @@index([creatorProfileId])
 }
@@ -231,6 +236,7 @@ model Campaign {
   applications   CampaignApplication[]
   collaborations Collaboration[]
   invitations    CampaignInvitation[]
+  briefAttachments CampaignBriefAttachment[]
   @@index([status, createdAt])
   @@index([brandId, status])
   @@index([assignedManagerId, status])
@@ -325,6 +331,7 @@ model DeliverableSubmission {
   submittedById String
   createdAt     DateTime @default(now())
   deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  attachments   DeliverableSubmissionAttachment[]
   @@unique([deliverableId, version])
   @@index([deliverableId, createdAt])
 }
@@ -400,4 +407,31 @@ model CampaignInvitation {
   @@unique([campaignId, creatorProfileId])
   @@index([creatorProfileId, status, createdAt])
   @@index([brandId, createdAt])
+}
+
+
+model CampaignBriefAttachment {
+  id           String   @id @default(cuid())
+  campaignId   String
+  fileName     String
+  url          String   @db.Text
+  publicId     String?
+  resourceType String   @default("raw")
+  bytes        Int      @default(0)
+  createdAt    DateTime @default(now())
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  @@index([campaignId, createdAt])
+}
+
+model DeliverableSubmissionAttachment {
+  id           String   @id @default(cuid())
+  submissionId String
+  fileName     String
+  url          String   @db.Text
+  publicId     String?
+  resourceType String   @default("raw")
+  bytes        Int      @default(0)
+  createdAt    DateTime @default(now())
+  submission   DeliverableSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  @@index([submissionId, createdAt])
 }
