@@ -37,10 +37,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       if (!row) return NextResponse.json({ error: "Deliverable does not belong to this collaboration." }, { status: 400 });
       content = [row.title, row.description, row.feedback].filter(Boolean).join("\n");
       url = row.assetUrl;
-    } else {
+    } else if (input.kind === "MILESTONE") {
       const row = await prisma.collaborationMilestone.findFirst({ where: { id: input.referenceId, collaborationId: id }, select: { title: true, description: true, status: true } });
       if (!row) return NextResponse.json({ error: "Milestone does not belong to this collaboration." }, { status: 400 });
       content = [row.title, row.description, `Status: ${row.status}`].filter(Boolean).join("\n");
+    } else {
+      const row = await prisma.deliverableSubmissionAttachment.findFirst({ where: { id: input.referenceId, submission: { deliverable: { collaborationId: id } } }, select: { fileName: true, url: true } });
+      if (!row) return NextResponse.json({ error: "File does not belong to this collaboration." }, { status: 400 });
+      content = row.fileName;
+      url = row.url;
     }
   }
   const evidence = await prisma.disputeEvidence.create({ data: { disputeId, submittedById: user.id, kind: input.kind, label: input.label, content, url, referenceId: input.referenceId || null } });
