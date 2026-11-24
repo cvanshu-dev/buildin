@@ -26,7 +26,7 @@ async function getCollaboration(id: string) {
           brand: {
             select: {
               name: true,
-              members: { where: { title: "Owner" }, select: { userId: true } },
+              members: { select: { userId: true } },
             },
           },
         },
@@ -174,12 +174,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         : { status: nextStatus },
     });
     const updated = await tx.collaborationAgreement.update({ where: { id: agreement.id }, data: { status: nextStatus } });
-    const ownerId = collab.campaign.brand.members[0]?.userId;
-    if (ownerId) {
+    const brandMemberIds = [...new Set(collab.campaign.brand.members.map((member) => member.userId))].filter((memberId) => memberId !== user.id);
+    if (brandMemberIds.length > 0) {
       const title = action === "ACCEPT" ? "Agreement accepted" : action === "DECLINE" ? "Agreement declined" : "Changes requested on agreement";
       const body = action === "REQUEST_CHANGES" ? (note || "The creator requested changes to the agreement.") : action === "ACCEPT" ? `The creator accepted the agreement for ${collab.campaign.title}.` : `The creator declined the agreement for ${collab.campaign.title}.`;
       await tx.notification.create({
-        data: { userId: ownerId, type: `AGREEMENT_${action}`, title, body, href: `/dashboard/brand/collaborations/${id}` },
+        data: brandMemberIds.map((userId) => ({ userId, type: `AGREEMENT_${action}`, title, body, href: `/dashboard/brand/collaborations/${id}` })),
       });
     }
     await tx.auditLog.create({
